@@ -1,0 +1,23 @@
+services:
+  assets:
+    build: .
+    ports:
+      - "${ASSET_PORT:-3000}:3000"
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?请在 .env 中设置至少12位管理员密码}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@company.local}
+      APP_ORIGIN: ${APP_ORIGIN:-}
+      IT_SERVICE_TOKEN: ${IT_SERVICE_TOKEN:-}
+      IT_SYNC_URL: ${IT_SYNC_URL:-}
+      IT_SYNC_TOKEN: ${IT_SYNC_TOKEN:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    volumes:
+      - asset-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  asset-data:

@@ -1,0 +1,37 @@
+# Dependencies and generated files
+/node_modules/
+/.pnpm-store/
+/.next/
+/dist/
+/internal-dist/
+/outputs/
+/coverage/
+*.tsbuildinfo
+*.log
+
+# Runtime data and backups
+/data/
+/backups/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.tar.gz
+*.zip
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.openai/
+.agents/
+.codex/
+.wrangler/
+.sites-runtime/
+/work/
+
+# Local OS files
+.DS_Store
+Thumbs.db
