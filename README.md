@@ -13,6 +13,10 @@
 
 详见 [功能说明](docs/FEATURES.md) 和 [IT小爱接口说明](docs/INTEGRATION.md)。
 
+<img width="1903" height="1065" alt="image" src="https://github.com/user-attachments/assets/2f7169f5-eddf-4f85-9afd-ee6cd9776b26" /><img width="1905" height="850" alt="image" src="https://github.com/user-attachments/assets/f7ffdd11-c69f-44cb-b301-e7b006b115f6" />
+
+
+
 ## 快速部署
 
 1. 安装 Docker Engine 和 **Docker Compose V2**，确认 `docker compose version` 可用。不要使用旧的 `docker-compose` V1。
