@@ -42,3 +42,40 @@ html[data-theme=dark] .brand-image img{filter:brightness(0) invert(1)}
 .inventory-list>.inventory-result{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);z-index:25;margin:0;width:96%;max-width:96%;box-shadow:0 8px 28px #0003}.inventory-list>.inventory-result.inventory-match-card{width:96%;max-width:96%}
 
 .backup-settings-stack{display:grid;gap:22px;align-content:start}.ledger-pagination{flex-wrap:wrap;gap:10px}.page-size-form{display:flex;gap:6px;align-items:center}.page-size-form input{width:85px;padding:7px}.page-size-form button{padding:7px 10px}
+.ledger-search-actions{flex-wrap:wrap}.ledger-search-actions .date-filter{white-space:nowrap}.filterable-heading{position:relative}.column-filter-button{border:0;background:transparent;padding:0;color:inherit;font-size:inherit;letter-spacing:inherit}.column-filter-button.active{color:#3868eb}.column-filter-button span{font-size:12px}.column-filter-menu{position:fixed;width:235px;z-index:30;display:grid;gap:8px;padding:12px;background:#fff;border:1px solid #e2e7ef;border-radius:8px;box-shadow:0 10px 28px #20365925}.column-filter-menu input{width:100%;font-weight:400;letter-spacing:0}.column-filter-options{max-height:210px;overflow:auto;display:grid;gap:2px}.column-filter-options button{justify-content:flex-start;overflow:hidden;text-overflow:ellipsis;border:0;padding:7px 8px}.column-filter-menu>button:last-child{color:#3868eb}html[data-theme=dark] .column-filter-menu{background:#1f2937;border-color:#374151}
+.danger-button{color:#c54848;border-color:#f0c9c9;background:#fff7f7}.danger-button:hover{color:#aa3030;border-color:#e9a9a9;background:#ffeded}html[data-theme=dark] .danger-button{color:#ffb4b4;border-color:#804747;background:#3b252b}html[data-theme=dark] .danger-button:hover{background:#513039}
+/* Asset attachments, typed fields and aging reminders */
+.field-config-form{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.field-config-form input{min-width:160px;flex:1}.field-config-form select{min-width:110px}.aging-panel .two-col{margin:0}.aging-panel h3{font-size:15px;margin:0 0 12px}.aging-item{display:flex;width:100%;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;margin:5px 0;border:1px solid var(--border,#e8edf4);border-radius:7px;background:transparent;text-align:left;color:inherit}.aging-item b{white-space:nowrap;color:#d59427}
+
+/* 登录页使用完整竖版 Logo，侧栏下方另设仓鼠图案裁切。 */
+.brand.brand-image{width:100%;height:145px;display:flex;align-items:center;justify-content:center;overflow:visible;padding:0}
+.brand-image img{position:static;width:122px;max-width:100%;height:138px;object-fit:contain}
+.nav-label{margin-top:14px}
+.login-brand{width:180px;height:195px;position:static;overflow:visible;margin:0 auto 8px}
+.login-brand img{position:static;width:100%;height:100%;object-fit:contain}
+.login-tagline{text-align:center;color:#805635;font-size:15px;font-weight:500;margin-bottom:8px}
+.concierge-logo{width:42px;height:46px;object-fit:contain}
+.concierge-text{font-size:12px;white-space:normal;line-height:1.5;text-align:left}
+.account-trigger{justify-content:flex-start;gap:5px}
+html[data-theme=dark] .brand-image img{filter:none}
+html[data-theme=dark] .concierge-text{color:#d7dfeb}
+@media(max-width:760px){.brand.brand-image{height:55px;width:100%}.brand-image img{width:48px;height:52px}.nav-label{margin-top:0}.concierge-logo{width:40px;height:44px}.concierge-text{display:none}.account-trigger{justify-content:center}}
+
+/* Sidebar uses the hamster illustration alone; its former embedded wordmark stays outside the crop. */
+.brand.brand-image{height:116px;flex-direction:column;gap:3px}
+.brand-mascot,.concierge-mascot{position:relative;display:block;overflow:hidden;flex-shrink:0}
+.brand .brand-mascot{width:74px;height:65px;display:block;background:none;border-radius:0}
+.brand-mascot img{position:absolute;width:104px;max-width:none;height:auto;left:50%;top:-8px;transform:translateX(-50%);object-fit:initial}
+.brand .brand-name{display:block;width:100%;height:auto;background:none;border-radius:0;font-size:18px;font-weight:700;letter-spacing:0;line-height:1.35;color:#35140d;text-align:center;white-space:nowrap}
+.concierge-mascot{width:52px;height:46px}
+.concierge-mascot .concierge-logo{position:absolute;width:73px;max-width:none;height:auto;left:50%;top:-5px;transform:translateX(-50%);object-fit:initial}
+.account-trigger{justify-content:center;padding:8px 0}
+html[data-theme=dark] .brand .brand-name{color:#f6dfc7}
+@media(max-width:760px){.brand.brand-image{height:55px;gap:0}.brand .brand-mascot{width:48px;height:44px}.brand-mascot img{width:70px;top:-5px}.brand .brand-name{display:none}.concierge-mascot{width:44px;height:41px}.concierge-mascot .concierge-logo{width:64px;top:-4px}}
+
+.account-trigger{justify-content:flex-start;gap:6px}
+.concierge-mascot{width:34px;height:32px}
+.concierge-mascot .concierge-logo{width:52px;top:-4px}
+.account-trigger .concierge-text{display:block;flex:1;min-width:0;font-size:12px;line-height:1.4;color:#805635;text-align:left;white-space:normal}
+html[data-theme=dark] .account-trigger .concierge-text{color:#ead2b9}
+@media(max-width:760px){.account-trigger{justify-content:center}.concierge-mascot{width:34px;height:32px}.concierge-mascot .concierge-logo{width:52px;top:-4px}.account-trigger .concierge-text{display:none}}

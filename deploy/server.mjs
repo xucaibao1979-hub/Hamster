@@ -7,6 +7,9 @@ import {initUsers,verifyPassword,publicUser,userList,userCommand} from './users.
 import {initPreferences,readDisplay,saveDisplay,directory,hydrate,scopedState,ownAssets,resolveCommand} from './access.mjs';
 import {initial,command,statusValue,claimBlockReason,effectiveHolder} from '../lib/assets.ts';
 import {initOperations,employeeList,employeeCommand,syncIdentity,historyList,recordHistory,importPreview,fullBackup,validateFullBackup,restoreExtensions,backupManager,businessCommand} from './operations.mjs';
+import {attachmentList,addAttachment} from './attachments.mjs';
+import {undoCandidate,undoApprovedFlow} from './flow-undo.mjs';
+import {agingStats} from '../lib/aging.ts';
 const password=process.env.ADMIN_PASSWORD||'';
 const email=process.env.ADMIN_EMAIL||'admin@company.local';
 const dir=resolve(process.env.DATA_DIR||'data');mkdirSync(dir,{recursive:true});
@@ -21,7 +24,7 @@ const sessions=new Map(),attempts=new Map();const sessionTTL=8*3600_000;
 const files={ '/': ['index.html','text/html;charset=utf-8'], '/app.js':['app.js','text/javascript;charset=utf-8'], '/app.css':['app.css','text/css;charset=utf-8'], '/brand.png':['brand.png','image/png'], '/concierge.png':['concierge.png','image/png'] };
 const staticDir=resolve('internal-dist');
 function json(res,status,data){res.writeHead(status,{'Content-Type':'application/json;charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))}
-async function body(req){let text='';for await(const c of req){text+=c;if(Buffer.byteLength(text)>32_000_000)throw new Error('请求超过 32MB')}return JSON.parse(text)}
+async function body(req,maxBytes=32_000_000){let text='';for await(const c of req){text+=c;if(Buffer.byteLength(text)>maxBytes)throw new Error('请求超过允许大小')}return JSON.parse(text)}
 function auth(req){const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('asset_session='))?.slice(14);const session=token&&sessions.get(token);if(!session||session.expires<Date.now()){if(token)sessions.delete(token);return null}const account=db.prepare('SELECT * FROM users WHERE id=? AND enabled=1').get(session.id);if(!account){sessions.delete(token);return null}const employee=db.prepare('SELECT id FROM employees WHERE loginUserId=? AND active=1').get(account.id);return {token,...publicUser(account),employeeId:employee?.id}}
 const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','same-origin');res.setHeader('Content-Security-Policy',"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'");
@@ -50,6 +53,28 @@ const server=http.createServer(async(req,res)=>{
   if(path.startsWith('/api/')){
    if(!user)return json(res,401,{error:'登录已过期，请刷新重新登录'});
    if(path==='/api/user-directory'&&req.method==='GET')return json(res,200,{users:directory(db).filter(u=>user.role==='admin'||u.id===user.employeeId)});
+   if(path==='/api/attachments'&&req.method==='GET'){
+    if(user.role!=='admin')return json(res,403,{error:'仅管理员可查看资产附件'});
+    const assetId=url.searchParams.get('assetId')||'',state=JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data);
+    if(!state.assets.some(a=>a.id===assetId))return json(res,404,{error:'资产不存在'});
+    return json(res,200,{attachments:attachmentList(db,assetId)});
+   }
+   if(path.startsWith('/api/attachments/')&&req.method==='GET'){
+    if(user.role!=='admin')return json(res,403,{error:'仅管理员可下载资产附件'});
+    const attachment=db.prepare('SELECT * FROM asset_attachments WHERE id=?').get(decodeURIComponent(path.slice('/api/attachments/'.length)));
+    if(!attachment)return json(res,404,{error:'附件不存在'});
+    res.writeHead(200,{'Content-Type':attachment.mime,'Content-Length':attachment.size,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(attachment.name)}`,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});return res.end(attachment.data);
+   }
+   if(path==='/api/attachments'&&req.method==='POST'){
+    if(user.role!=='admin')return json(res,403,{error:'仅管理员可管理资产附件'});
+    const input=await body(req),state=JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data),asset=state.assets.find(a=>a.id===input.assetId);
+    if(!asset)return json(res,404,{error:'资产不存在'});
+    db.exec('BEGIN IMMEDIATE');try{
+     let detail;if(input.action==='delete'){const old=db.prepare('SELECT name FROM asset_attachments WHERE id=? AND assetId=?').get(input.id,asset.id);if(!old)throw new Error('附件不存在');db.prepare('DELETE FROM asset_attachments WHERE id=?').run(input.id);detail='删除附件：'+old.name}
+     else if(input.action==='add'){addAttachment(db,asset.id,input,user.username);detail='上传附件：'+input.name}else throw new Error('附件操作无效');
+     const time=new Date().toISOString();db.prepare('INSERT INTO asset_history VALUES (?,?,?,?,?,?,?,?)').run(randomUUID(),asset.id,time,user.username,'attachment',JSON.stringify(asset),JSON.stringify(asset),detail);state.logs.unshift({id:randomUUID(),time,actor:user.username,action:'attachment',detail:asset.number+' · '+detail});db.prepare("UPDATE asset_state SET data=?,revision=revision+1 WHERE id='company'").run(JSON.stringify(state));db.exec('COMMIT');return json(res,200,{attachments:attachmentList(db,asset.id)})
+    }catch(e){db.exec('ROLLBACK');throw e}
+   }
    if(path==='/api/display-settings'){
     const state=JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data);
     if(req.method==='GET')return json(res,200,readDisplay(db,user.id,state));
@@ -91,11 +116,16 @@ const server=http.createServer(async(req,res)=>{
     const rows=importPreview(db,state,c.assets,raw=>{if(raw.holder&&!raw.holderEmployeeId&&!raw.holderUserId&&!raw.holderUsername&&!raw.wecomUserId){const matches=directory(db).filter(e=>e.enabled&&e.name===raw.holder);if(matches.length>1)throw new Error(matches.length?'领用人同名，请填写企业微信 UserID':'领用人尚未同步，可先按姓名记录资产');if(matches.length===1)raw={...raw,holderEmployeeId:matches[0].id}}return resolveCommand(db,state,{action:'save',asset:raw}).asset});const additions=Object.fromEntries(['category','ownership','type','status'].map(k=>[k,[...new Set(rows.filter(r=>r.asset).map(r=>r.asset[k]).filter(v=>v&&!state.dictionaries[k].includes(v)))]]));return json(res,200,{rows,additions,valid:rows.every(r=>!r.errors.length)});
    }
    if(path.startsWith('/api/history/')&&req.method==='GET'){
-    const id=decodeURIComponent(path.slice('/api/history/'.length)),state=hydrate(JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data),directory(db));if(user.role!=='admin'&&!ownAssets(state,user).some(a=>a.id===id))return json(res,404,{error:'资产不存在或无权查看'});return json(res,200,{history:historyList(db,id)});
+    const id=decodeURIComponent(path.slice('/api/history/'.length)),raw=JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data),state=hydrate(raw,directory(db));if(user.role!=='admin'&&!ownAssets(state,user).some(a=>a.id===id))return json(res,404,{error:'资产不存在或无权查看'});return json(res,200,{history:historyList(db,id),undoable:user.role==='admin'?undoCandidate(db,raw,id)?.historyId||'':''});
+   }
+   if(path==='/api/flow-undo'&&req.method==='POST'){
+    if(user.role!=='admin')return json(res,403,{error:'仅管理员可撤销流转'});
+    const input=await body(req),row=db.prepare("SELECT revision,data FROM asset_state WHERE id='company'").get();if(input.revision!==row.revision)return json(res,409,{error:'数据已更新，请刷新后重试'});
+    if(input.confirm!=='撤销')throw new Error('请输入撤销确认');db.exec('BEGIN IMMEDIATE');try{const state=undoApprovedFlow(db,JSON.parse(row.data),String(input.assetId||''),String(input.historyId||''),user.username);const result=db.prepare("UPDATE asset_state SET data=?,revision=revision+1 WHERE id='company' AND revision=?").run(JSON.stringify(state),row.revision);if(!result.changes)throw new Error('数据已更新，请刷新后重试');db.exec('COMMIT');return json(res,200,{ok:true,revision:row.revision+1})}catch(e){db.exec('ROLLBACK');throw e}
    }
    if(path==='/api/notifications'){
     const state=scopedState(hydrate(JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data),directory(db)),user),read=new Set(db.prepare('SELECT id FROM notification_reads WHERE userId=?').all(user.id).map(r=>r.id));
-    const items=[...state.requests.filter(r=>['待审批','待接收确认'].includes(r.status)).map(r=>({id:r.id,time:r.created,title:r.kind+'申请 · '+r.status,kind:'flow'})),...state.assets.filter(a=>a.status===statusValue(state,'damaged')).map(a=>({id:'damaged:'+a.id,time:'',title:a.name+' · 损坏',kind:'asset',assetId:a.id})),...state.assets.filter(a=>a.expires&&a.expires<=new Date(Date.now()+30*86400000).toISOString().slice(0,10)).map(a=>({id:'expiry:'+a.id+':'+a.expires,time:a.expires,title:a.name+' · 授权到期 '+a.expires,kind:'asset',assetId:a.id}))].map(i=>({...i,read:read.has(i.id)}));
+    const aging=agingStats(state);const items=[...state.requests.filter(r=>['待审批','待接收确认'].includes(r.status)).map(r=>({id:r.id,time:r.created,title:r.kind+'申请 · '+r.status,kind:'flow'})),...state.assets.filter(a=>a.status===statusValue(state,'damaged')).map(a=>({id:'damaged:'+a.id,time:'',title:a.name+' · 损坏',kind:'asset',assetId:a.id})),...state.assets.filter(a=>a.expires&&a.expires<=new Date(Date.now()+30*86400000).toISOString().slice(0,10)).map(a=>({id:'expiry:'+a.id+':'+a.expires,time:a.expires,title:a.name+' · 授权到期 '+a.expires,kind:'asset',assetId:a.id})),...aging.idle.slice(0,10).map(({asset,days,since})=>({id:'idle-aging:'+asset.id+':'+since,time:since,title:asset.name+' · 闲置 '+days+' 天',kind:'asset',assetId:asset.id})),...aging.assigned.slice(0,10).map(({asset,days,since})=>({id:'assigned-aging:'+asset.id+':'+since,time:since,title:asset.name+' · 已领用 '+days+' 天',kind:'asset',assetId:asset.id}))].map(i=>({...i,read:read.has(i.id)}));
     if(req.method==='POST'){const c=await body(req);if(!items.some(i=>i.id===c.id))throw new Error('通知不存在');db.prepare('INSERT OR IGNORE INTO notification_reads VALUES (?,?)').run(user.id,c.id)}return json(res,200,{items});
    }
    if(path==='/api/business'&&req.method==='GET'){if(user.role!=='admin')return json(res,403,{error:'仅管理员可查看业务记录'});return json(res,200,{records:db.prepare('SELECT * FROM operation_records').all().map(o=>({...JSON.parse(o.data),kind:o.kind}))})}
@@ -131,7 +161,7 @@ const server=http.createServer(async(req,res)=>{
     if(requested&&user.role==='admin'){const target=db.prepare('SELECT id FROM users WHERE username=?').get(requested.toLowerCase());state={...state,assets:target?state.assets.filter(a=>a.holderUserId===target.id):[],requests:[],logs:[],events:[]}}
     return json(res,200,{revision:row.revision,state:scopedState(state,user)});
    }
-   if(req.method==='POST'){const input=await body(req);if(user.role!=='admin'&&input.action!=='confirmTransfer')return json(res,403,{error:'普通用户仅可确认本人接收申请'});if(input.revision!==row.revision)return json(res,409,{error:'数据已更新，请刷新后重试'});const original=JSON.parse(row.data);let state=structuredClone(original);
+   if(req.method==='POST'){const input=await body(req,user.role==='admin'?128_000_000:32_000_000);if(user.role!=='admin'&&input.action!=='confirmTransfer')return json(res,403,{error:'普通用户仅可确认本人接收申请'});if(input.revision!==row.revision)return json(res,409,{error:'数据已更新，请刷新后重试'});const original=JSON.parse(row.data);let state=structuredClone(original);
     if(input.action==='restore')validateFullBackup(input.backup);
     if(input.action==='confirmTransfer')input.employeeId=user.employeeId;
     const business=['inventoryTaskCreate','inventoryTaskScan','inventoryTaskSave','inventoryTaskEnd','inventoryCreate','inventoryUpdate','inventoryScan','repair','stock'].includes(input.action);

@@ -4,8 +4,10 @@ import {join} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {validateBackup} from '../lib/restore.ts';
 import {validateAsset,statusValue,categoryValue,importDictionaries} from '../lib/assets.ts';
+import {allAttachments,initAttachments,validateAttachments} from './attachments.mjs';
 
 export function initOperations(db){
+ initAttachments(db);
  db.exec(`CREATE TABLE IF NOT EXISTS employees(id TEXT PRIMARY KEY,name TEXT NOT NULL,wecomUserId TEXT NOT NULL DEFAULT '',department TEXT NOT NULL DEFAULT '',active INTEGER NOT NULL DEFAULT 1,loginUserId TEXT NOT NULL DEFAULT '',legacy INTEGER NOT NULL DEFAULT 0);
  CREATE UNIQUE INDEX IF NOT EXISTS employee_wecom ON employees(wecomUserId) WHERE wecomUserId<>'';
  CREATE UNIQUE INDEX IF NOT EXISTS employee_login ON employees(loginUserId) WHERE loginUserId<>'';
@@ -54,7 +56,7 @@ export function importPreview(db,state,rows,resolve){
  const numbers=new Set(state.assets.map(a=>a.number));let seen=new Set();
  return rows.map((raw,i)=>{const errors=[];let asset;try{asset=validateAsset(resolve(raw),importDictionaries(state,[raw]))}catch(e){errors.push(e.message)}const number=String(raw.number||'').trim();if(numbers.has(number)||seen.has(number))errors.push('资产编号重复：'+number);seen.add(number);return {row:i+2,name:String(raw.name||''),number,holder:asset?.holder||String(raw.holder||''),errors,asset}});
 }
-export function fullBackup(db){return {format:'asset-hub-backup',version:1,exportedAt:new Date().toISOString(),state:JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data),extensions:{employees:employeeList(db),history:db.prepare('SELECT * FROM asset_history').all(),operations:db.prepare('SELECT * FROM operation_records').all(),outbox:db.prepare('SELECT * FROM sync_outbox').all()}}}
+export function fullBackup(db){return {format:'asset-hub-backup',version:1,exportedAt:new Date().toISOString(),state:JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data),extensions:{employees:employeeList(db),history:db.prepare('SELECT * FROM asset_history').all(),operations:db.prepare('SELECT * FROM operation_records').all(),outbox:db.prepare('SELECT * FROM sync_outbox').all(),attachments:allAttachments(db)}}}
 export function validateFullBackup(raw){
  validateBackup(raw);if(!raw.extensions)return true;const x=raw.extensions;
  for(const k of ['employees','history','operations','outbox'])if(!Array.isArray(x[k])||x[k].length>200000)throw new Error('备份扩展数据无效');
@@ -62,11 +64,13 @@ export function validateFullBackup(raw){
  for(const h of x.history){if(typeof h.id!=='string'||typeof h.assetId!=='string'||!Number.isFinite(Date.parse(h.time))||typeof h.actor!=='string'||typeof h.action!=='string'||typeof h.detail!=='string')throw new Error('历史备份无效');for(const v of [h.beforeData,h.afterData])if(v&&(!JSON.parse(v)||typeof JSON.parse(v)!=='object'))throw new Error('历史快照无效')}
  for(const o of x.operations)if(typeof o.id!=='string'||!['inventory','inventoryConfirmation','repair','stock'].includes(o.kind)||typeof o.data!=='string'||!JSON.parse(o.data))throw new Error('业务备份无效');
  for(const o of x.outbox)if(typeof o.id!=='string'||typeof o.data!=='string'||!JSON.parse(o.data)||!['pending','sent','failed','cancelled','processed'].includes(o.status)||!Number.isInteger(o.attempts)||o.attempts<0||!Number.isFinite(Date.parse(o.nextAttempt)))throw new Error('同步备份无效');
+ validateAttachments(x.attachments,new Set([...raw.state.assets,...(raw.state.deletedAssets||[])].map(a=>a.id)));
  return true;
 }
 export function restoreExtensions(db,raw){
- if(!raw.extensions)return;validateFullBackup(raw);const x=raw.extensions;
- for(const e of x.employees){if(e.loginUserId&&!db.prepare('SELECT id FROM users WHERE id=?').get(e.loginUserId))throw new Error('备份关联账号不存在，请先建立账号');db.prepare('INSERT INTO employees VALUES (?,?,?,?,?,?,0) ON CONFLICT(id) DO UPDATE SET name=excluded.name,wecomUserId=excluded.wecomUserId,department=excluded.department,active=excluded.active,loginUserId=excluded.loginUserId,legacy=0').run(e.id,e.name,e.wecomUserId,e.department,e.active?1:0,e.loginUserId)}
+ if(!raw.extensions){db.exec('DELETE FROM asset_attachments');return}validateFullBackup(raw);const x=raw.extensions;
+ db.exec('DELETE FROM asset_attachments');for(const a of validateAttachments(x.attachments,new Set([...raw.state.assets,...(raw.state.deletedAssets||[])].map(a=>a.id))))db.prepare('INSERT INTO asset_attachments VALUES (?,?,?,?,?,?,?,?,?)').run(a.id,a.assetId,a.name,a.kind,a.mime,a.size,a.created,a.actor,a.data);
+ for(const e of x.employees){const loginUserId=e.loginUserId&&db.prepare('SELECT id FROM users WHERE id=?').get(e.loginUserId)?e.loginUserId:'';db.prepare('INSERT INTO employees VALUES (?,?,?,?,?,?,0) ON CONFLICT(id) DO UPDATE SET name=excluded.name,wecomUserId=excluded.wecomUserId,department=excluded.department,active=excluded.active,loginUserId=excluded.loginUserId,legacy=0').run(e.id,e.name,e.wecomUserId,e.department,e.active?1:0,loginUserId)}
  // 生命周期历史只追加，恢复旧备份也不删除已经发生的历史。
  for(const h of x.history)db.prepare('INSERT OR IGNORE INTO asset_history VALUES (?,?,?,?,?,?,?,?)').run(h.id,h.assetId,h.time,h.actor,h.action,h.beforeData,h.afterData,h.detail);
  db.exec('DELETE FROM operation_records');for(const o of x.operations)db.prepare('INSERT INTO operation_records VALUES (?,?,?)').run(o.id,o.kind,o.data);

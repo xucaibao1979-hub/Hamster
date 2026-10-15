@@ -1,6 +1,6 @@
 {
-  "name": "asset-hub-source-2026.10.13-final",
-  "createdAt": "2026-10-13T08:50:45.697Z",
+  "name": "asset-hub-source-2026.10.15-brand-1",
+  "createdAt": "2026-10-15T06:10:22.857Z",
   "files": [
     {
       "path": ".dockerignore",
@@ -15,8 +15,16 @@
       "sha256": "a3909ac0447c469fda12c57374993be70f47ce73e49fd3124678c7c047f2214d"
     },
     {
+      "path": "app/aging-panel.tsx",
+      "sha256": "2fc4bf1f970c161444fbd4c1ba57dbb06b21e536f3188bf2695a75c02abe70bf"
+    },
+    {
       "path": "app/api/assets/route.ts",
       "sha256": "a5b8c9f1d9df32f3b9bd8235393519732e35d568ac3e865ae956a932709e82e8"
+    },
+    {
+      "path": "app/asset-attachments.tsx",
+      "sha256": "05a4dc83427ec4bcad1e979c74570c263ef1ac56d12ee1cebe8c792001e6f290"
     },
     {
       "path": "app/asset-labels.tsx",
@@ -24,7 +32,7 @@
     },
     {
       "path": "app/assets-app.tsx",
-      "sha256": "ea566ae7d8898fd418a818262e0eaae64789a0c65fa916dea553babc4b6a2ac4"
+      "sha256": "169272d9f146df57341342b95afcff96166600ecaec375eb0d4b501c4e89f0f0"
     },
     {
       "path": "app/chatgpt-auth.ts",
@@ -36,19 +44,19 @@
     },
     {
       "path": "app/field-dictionary.tsx",
-      "sha256": "da48b7229f3e08a9dd22692858b52163d546c6335431502b4beffa5de129d5f5"
+      "sha256": "6e7eb1170178f5d49a232dd51225fcd8575ff5008d77e3a709192dad128c8334"
     },
     {
       "path": "app/globals.css",
-      "sha256": "bb499ada59ecda7e98daa65e1bd28b11cdcaa1faed426582984de5430cd65c43"
+      "sha256": "305fd0da21609297c23101cd523baa8320f937e9094b4d5ba82006ded3a8fb26"
     },
     {
       "path": "app/layout.tsx",
-      "sha256": "0f638e1fbb6f73e837cc3f92fede2026aec5bdb4968ae57cd403a186ab3fae01"
+      "sha256": "dddf5e9eccfb657930773b3354e56206beffa0163dacbe953e2c5fa66b6fdd50"
     },
     {
       "path": "app/operations-panels.tsx",
-      "sha256": "aeb7a427310ad9a52305f6b02b52dce2f42f67e8bee3ef1ef0b6e7e3e1e936dd"
+      "sha256": "b07fdb36a9ce961249a0c68c81114961736bab6490a80194fa2ed1589fb52440"
     },
     {
       "path": "app/page.tsx",
@@ -68,23 +76,31 @@
     },
     {
       "path": "deploy/access.mjs",
-      "sha256": "80329344da27f4067559a8ed7c1396661c4b3b24b65032a8dad43e1228ccd75f"
+      "sha256": "a35d24d00009f989a8a809a1d1d43c13e7af736bb25d70c7b249d69abe9e4251"
+    },
+    {
+      "path": "deploy/attachments.mjs",
+      "sha256": "1c8bef178aa713fac962009b8a3a05712bda5ef2e2ba6cc86466c475b5126f03"
     },
     {
       "path": "deploy/build.mjs",
-      "sha256": "d9bb0f66a42f6284d14c57972f4474f9ae4f0f9b6ce9379a1bb63af062dafef1"
+      "sha256": "c84fa342982e0ec1314b97f16d4722f00fcdb1920430bcdba25993265a3626de"
     },
     {
       "path": "deploy/client.tsx",
-      "sha256": "8a4e13b5cbdfd6a220a42ad5794075e0a9538811c3d9413996d08a97ea3d44cf"
+      "sha256": "f9946d7a3250cbf72b8cb4e7cb32b3f35b08837be6caee4581015b3ff51c75ee"
     },
     {
       "path": "deploy/env.example",
       "sha256": "5367cfa0d6006eef7600fd3515aae30c03aa43a9245eec892fee8a432903f335"
     },
     {
+      "path": "deploy/flow-undo.mjs",
+      "sha256": "9c86b92ac5b95d622e2aa131f61c308d4d67921d8169ca68fbbe6bbe576baee9"
+    },
+    {
       "path": "deploy/operations.mjs",
-      "sha256": "02fdc59412f4b0a2bfb7c43525cbfc201f813bf78ee5bc9be2192f1034afa762"
+      "sha256": "f41a92d80d4dea120607fe93c1fbb73b68c5dc2e1b7192193cb570f1882dec2c"
     },
     {
       "path": "deploy/repair-holder-status.mjs",
@@ -92,7 +108,7 @@
     },
     {
       "path": "deploy/server.mjs",
-      "sha256": "a1ce1ef4c43c784b52634fdcf26a8d3d51c8e98584695fbaae692c13b8063153"
+      "sha256": "d5065ec80dd5bc30686f20dffb6ddb057aaa7ef522b1c1d7db1ac55b34854ebf"
     },
     {
       "path": "deploy/sync.mjs",
@@ -116,7 +132,7 @@
     },
     {
       "path": "docs/FEATURES.md",
-      "sha256": "8897e6647c14b2f8b46d9d45407f2ba175f0d8d3423ae39d9cde16ae71814c10"
+      "sha256": "79c9b2d86b886b460f2c4135b234685733144ff024cc65e10ba5174c2e50c926"
     },
     {
       "path": "docs/GITHUB_RELEASE.md",
@@ -132,15 +148,19 @@
     },
     {
       "path": "docs/INTEGRATION.md",
-      "sha256": "994eed5258f029dcfd579319065d73bb846fde457abff4b53be33e8fabd63411"
+      "sha256": "6cbadbefa075324dc0fae07a8ce87ae6093c248023a47989ba1365f41d227667"
     },
     {
       "path": "docs/OPERATIONS.md",
       "sha256": "a3756e35b466cecf6d4452580e29ce31ba2de93869027c06e765262f5b723c3f"
     },
     {
+      "path": "lib/aging.ts",
+      "sha256": "767d025f67f6d006093e2d8b188e3c9d9108aa79050ac4e0fde5f14acc2bb439"
+    },
+    {
       "path": "lib/assets.ts",
-      "sha256": "1891910f6e036fa98e7d2c38738048002c45b3f2fce9c87b769c287e44a529c4"
+      "sha256": "74fb49593f816c199b6a67cc240fb883adcd25028ab764b59d882b776c31a6a5"
     },
     {
       "path": "lib/connector-context.ts",
@@ -176,7 +196,7 @@
     },
     {
       "path": "lib/restore.ts",
-      "sha256": "546b37bdf6b09b3f91d8a986412003eeda19c1699583aea0a7cbb06a43cf91e9"
+      "sha256": "b6ec04de9ebf50c8dfb5c229d4f4a01a56ab2f81203dccd0adaa1572b8abbdff"
     },
     {
       "path": "lib/utils.ts",
@@ -204,11 +224,11 @@
     },
     {
       "path": "public/brand.png",
-      "sha256": "a7e5dc12fe66e5cbc702c72f06fde02de85a57ae7e7535b7662a64c7b77cecc3"
+      "sha256": "4859b9e2a87f9f188e4a5602ef61c86daba069651d30ce927505d7df65f03d20"
     },
     {
       "path": "public/concierge.png",
-      "sha256": "6186002b233f15c10634e20ec2efb056fd3b9f5a0fe83f3a07c10c1d1460c874"
+      "sha256": "4859b9e2a87f9f188e4a5602ef61c86daba069651d30ce927505d7df65f03d20"
     },
     {
       "path": "public/favicon.svg",
@@ -228,7 +248,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "86b931b6600307df46cdf4263752fbb3a24e09fc8a07fde9ab037e4f44849922"
+      "sha256": "99126f848a94a6921331e06875f3d6e5e671a758c21e0fef2fb170bf9c85c440"
     },
     {
       "path": "scripts/package-clean.mjs",
@@ -240,7 +260,7 @@
     },
     {
       "path": "tests/assets.test.mjs",
-      "sha256": "28e54b0e656e99c98174856b1ed125a6ffca94a7ff8d404cc4d99146fb3b9e1b"
+      "sha256": "282b9162bcce7aebe502508a0180446108e9d7e33d966aeab22b36635fa67c82"
     },
     {
       "path": "tests/holder-status-repair.test.mjs",

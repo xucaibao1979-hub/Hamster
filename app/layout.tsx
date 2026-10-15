@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "资产管理 · AssetHub",
-  description: "公司资产台账与全生命周期管理",
+  title: "小仓鼠资产管理平台",
+  description: "每件资产，都有自己的位置。",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: "/brand.png",
+    shortcut: "/brand.png",
   },
 };
 
