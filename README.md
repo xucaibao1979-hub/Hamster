@@ -13,6 +13,10 @@
 - 管理与保护：管理员账号、密码、操作日志、资产照片及凭证附件、每日自动备份、备份验证和恢复；仪表盘提醒长期闲置与领用资产。
 - IT小爱接入：服务凭证与企业微信 UserID 鉴权，按本人身份查询，领用申请幂等处理；真实的企业微信登录和消息通知由 IT小爱负责。
 
+<img width="1915" height="1013" alt="image" src="https://github.com/user-attachments/assets/53d0d6e4-6450-40ec-949e-7f5c47cc6402" /><img width="1883" height="635" alt="image" src="https://github.com/user-attachments/assets/df3f41f1-e688-4233-8b15-219b2ec8238b" />
+<img width="1879" height="797" alt="image" src="https://github.com/user-attachments/assets/97a49ecd-f1b5-42d6-94fa-296fcecea05f" />
+
+
 详见 [功能说明](docs/FEATURES.md) 和 [IT小爱接口说明](docs/INTEGRATION.md)。
 
 ## 快速部署
