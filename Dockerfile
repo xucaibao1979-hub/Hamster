@@ -20,6 +20,10 @@ COPY deploy/access.mjs ./deploy/access.mjs
 COPY deploy/operations.mjs ./deploy/operations.mjs
 COPY deploy/attachments.mjs ./deploy/attachments.mjs
 COPY deploy/flow-undo.mjs ./deploy/flow-undo.mjs
+COPY deploy/database-backups.mjs ./deploy/database-backups.mjs
+COPY deploy/backup-retention.mjs ./deploy/backup-retention.mjs
+COPY deploy/backup-database.mjs ./deploy/backup-database.mjs
+COPY deploy/restore-database.mjs ./deploy/restore-database.mjs
 COPY deploy/sync.mjs ./deploy/sync.mjs
 COPY deploy/repair-holder-status.mjs ./deploy/repair-holder-status.mjs
 RUN mkdir /data && chown node:node /data

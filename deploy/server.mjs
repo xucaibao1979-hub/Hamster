@@ -10,6 +10,7 @@ import {initOperations,employeeList,employeeCommand,syncIdentity,historyList,rec
 import {attachmentList,addAttachment} from './attachments.mjs';
 import {undoCandidate,undoApprovedFlow} from './flow-undo.mjs';
 import {agingStats} from '../lib/aging.ts';
+import {databaseBackupManager} from './database-backups.mjs';
 const password=process.env.ADMIN_PASSWORD||'';
 const email=process.env.ADMIN_EMAIL||'admin@company.local';
 const dir=resolve(process.env.DATA_DIR||'data');mkdirSync(dir,{recursive:true});
@@ -17,6 +18,9 @@ const db=new DatabaseSync(join(dir,'assets.sqlite'));db.exec('PRAGMA journal_mod
 db.prepare('INSERT OR IGNORE INTO asset_state (id,revision,data) VALUES (?,0,?)').run('company',JSON.stringify(initial()));
 initUsers(db,password,email,process.env.ADMIN_USERNAME||'admin');
 initPreferences(db);initOperations(db);db.prepare("UPDATE sync_outbox SET status='cancelled' WHERE status IN ('pending','failed') AND json_extract(data,'$.type')<>'it.task'").run();const backups=backupManager(db,dir);backups.daily();setInterval(()=>{try{backups.daily()}catch(e){console.error('每日备份失败：'+e.message)}},3600_000).unref();
+const databaseBackups=databaseBackupManager(db,dir);
+databaseBackups.daily().catch(e=>console.error('每日数据库备份失败：'+e.message));
+setInterval(()=>databaseBackups.daily().catch(e=>console.error('每日数据库备份失败：'+e.message)),3600_000).unref();
 function retainLogs(state){const cutoff=new Date();cutoff.setUTCFullYear(cutoff.getUTCFullYear()-1);state.logs=state.logs.filter(l=>new Date(l.time)>=cutoff);return state}
 function expireLogs(){const row=db.prepare('SELECT data,revision FROM asset_state WHERE id=?').get('company');const state=JSON.parse(row.data);const count=state.logs.length;retainLogs(state);if(count!==state.logs.length)db.prepare('UPDATE asset_state SET data=?,revision=revision+1 WHERE id=? AND revision=?').run(JSON.stringify(state),'company',row.revision)}
 expireLogs();setInterval(expireLogs,3600_000).unref();
@@ -109,6 +113,22 @@ const server=http.createServer(async(req,res)=>{
     const filename=new URL(req.url,'http://localhost').searchParams.get('file');
     if(req.method==='GET')return json(res,200,filename?backups.read(filename):{backups:backups.list()});
     const c=await body(req);if(c.action==='create')return json(res,200,backups.create());if(c.action==='verify'){return json(res,200,{...backups.verify(backups.read(c.filename)),filename:c.filename})}throw new Error('备份操作无效');
+   }
+   if(path==='/api/database-backups'){
+    if(user.role!=='admin')return json(res,403,{error:'仅管理员可管理数据库备份'});
+    const filename=new URL(req.url,'http://localhost').searchParams.get('file');
+    if(req.method==='GET'&&filename){
+     databaseBackups.filePath(filename);
+     res.writeHead(200,{'Content-Type':'application/vnd.sqlite3','Content-Disposition':`attachment; filename="${filename}"`,'Cache-Control':'no-store'});
+     databaseBackups.stream(filename).on('error',error=>res.destroy(error)).pipe(res);
+     return;
+    }
+    if(req.method==='GET')return json(res,200,{backups:databaseBackups.list()});
+    if(req.method!=='POST')return json(res,405,{error:'不支持的请求方法'});
+    const input=await body(req);
+    if(input.action==='create')return json(res,200,await databaseBackups.create());
+    if(input.action==='verify')return json(res,200,{filename:input.filename,...databaseBackups.verify(input.filename)});
+    throw new Error('数据库备份操作无效');
    }
    if(path==='/api/backup/export'&&req.method==='GET'){if(user.role!=='admin')return json(res,403,{error:'仅管理员可导出备份'});return json(res,200,fullBackup(db))}
    if(path==='/api/import/preview'){

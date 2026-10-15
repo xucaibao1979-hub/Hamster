@@ -1,6 +1,6 @@
 {
-  "name": "asset-hub-source-2026.10.15-prod2",
-  "createdAt": "2026-10-15T06:25:28.406Z",
+  "name": "asset-hub-source-2026.10.15-github-external-backups",
+  "createdAt": "2026-10-15T09:36:02.364Z",
   "files": [
     {
       "path": ".dockerignore",
@@ -32,7 +32,7 @@
     },
     {
       "path": "app/assets-app.tsx",
-      "sha256": "169272d9f146df57341342b95afcff96166600ecaec375eb0d4b501c4e89f0f0"
+      "sha256": "bb9b86ee77d7983ecb9b173eaf19241f15b330c1f981d6bf3d63acac70245202"
     },
     {
       "path": "app/chatgpt-auth.ts",
@@ -56,7 +56,7 @@
     },
     {
       "path": "app/operations-panels.tsx",
-      "sha256": "b07fdb36a9ce961249a0c68c81114961736bab6490a80194fa2ed1589fb52440"
+      "sha256": "803e790ef32347025fa9cb562b679ee793e9fe15ebc4d4a132ca0c163d7319a4"
     },
     {
       "path": "app/page.tsx",
@@ -68,7 +68,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "f1ee13fea3fbb2b3dd6e5cacc8ca2e9b0ef2171d1b77b59c815d73b5dfeb2b11"
+      "sha256": "107aaa25a5711a29d89ffac170e6ada40d8b268fbea337a65094efab127fd637"
     },
     {
       "path": "compose.yaml",
@@ -83,12 +83,24 @@
       "sha256": "1c8bef178aa713fac962009b8a3a05712bda5ef2e2ba6cc86466c475b5126f03"
     },
     {
+      "path": "deploy/backup-database.mjs",
+      "sha256": "755cf8f4b329ffb9b0754713635e4ed31a2495aae060c0667d17bc040351f680"
+    },
+    {
+      "path": "deploy/backup-retention.mjs",
+      "sha256": "ffc0aa4a47e2bcad8dfd3f37a9caae3d406ebef72bcf0c715fd75d49ec926465"
+    },
+    {
       "path": "deploy/build.mjs",
       "sha256": "c84fa342982e0ec1314b97f16d4722f00fcdb1920430bcdba25993265a3626de"
     },
     {
       "path": "deploy/client.tsx",
       "sha256": "f9946d7a3250cbf72b8cb4e7cb32b3f35b08837be6caee4581015b3ff51c75ee"
+    },
+    {
+      "path": "deploy/database-backups.mjs",
+      "sha256": "891d35291175d38480f3c1671c2d54fb0cbd884be159c136386823b9fc86a10e"
     },
     {
       "path": "deploy/env.example",
@@ -100,15 +112,19 @@
     },
     {
       "path": "deploy/operations.mjs",
-      "sha256": "f41a92d80d4dea120607fe93c1fbb73b68c5dc2e1b7192193cb570f1882dec2c"
+      "sha256": "d1645ef424a28360c36c02916da56773b78d553c59b6b906a0bdf97ff0d81abe"
     },
     {
       "path": "deploy/repair-holder-status.mjs",
       "sha256": "aef1c6d06100457f731c20533439a9f5c5d53de401a343827b2288d616cc580e"
     },
     {
+      "path": "deploy/restore-database.mjs",
+      "sha256": "3aac630962d7c394b23f36a932c68267b1f3aaf6d4fecf0b3143467ca8afdb9b"
+    },
+    {
       "path": "deploy/server.mjs",
-      "sha256": "d5065ec80dd5bc30686f20dffb6ddb057aaa7ef522b1c1d7db1ac55b34854ebf"
+      "sha256": "10c636e4cee7dc42f0b1da6f68a1aefa12a343bd1169b15294232156961d0964"
     },
     {
       "path": "deploy/sync.mjs",
@@ -120,15 +136,15 @@
     },
     {
       "path": "Dockerfile",
-      "sha256": "8f7cafcbf0cef719d81485e87b17343da7605b939d6259611d028385dee09d91"
+      "sha256": "70b97dcfe97219669e585effae5ca55f36c1b2ace79d652b47ca8510575591a2"
     },
     {
       "path": "docs/ARCHIVE.md",
-      "sha256": "a865fdc2e0676f7d179d20f1993847e816e3745fe9a4420fd04ba1274b4cf303"
+      "sha256": "e5f9b78f0f82ecdedf5812a4ff8ba1037045c6df19198f706a0b2c0bfd661de0"
     },
     {
       "path": "docs/DEPLOYMENT.md",
-      "sha256": "b94997e746f83908d68b69113ce09d56b71eb7d005376340f6bd0dbfffc46782"
+      "sha256": "96405088db697abaf8aebd96c0aa06d81937fc2b76bafec8a9bd498f8273d9a8"
     },
     {
       "path": "docs/FEATURES.md",
@@ -136,11 +152,11 @@
     },
     {
       "path": "docs/GITHUB_RELEASE.md",
-      "sha256": "284a92e88f871d356c9e9315a019553f21d9ff91471005b5d825ade384f45532"
+      "sha256": "181606df47be849a14309ccd48da63c91000db7b3158c9b5ef65a6b0cd9acca2"
     },
     {
       "path": "docs/GITHUB_RELEASE_NOTES.md",
-      "sha256": "0767a04c29ca9b41d710deebf81e6729dd0465651a031f05c9b0a667973a419c"
+      "sha256": "4834bfa9f1edcd0565700c1858243ece589f4b9d45925bb9a0c53ae943078e87"
     },
     {
       "path": "docs/HOLDER_STATUS_REPAIR.md",
@@ -152,7 +168,7 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "sha256": "a3756e35b466cecf6d4452580e29ce31ba2de93869027c06e765262f5b723c3f"
+      "sha256": "a1aa6b772e8b1696d47d3ad24d493a173fab42746bc171903bcf8d30918a2a6a"
     },
     {
       "path": "lib/aging.ts",
@@ -208,7 +224,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "63522f5a2bf3f76c3ea370e1228bd071bb2bbb0951610a63d7d6a5f205f39539"
+      "sha256": "589cb19474764d70dc5e6d49465783ec7ace6d0ef43daaccdf4b984de56780fb"
     },
     {
       "path": "pnpm-lock.yaml",
@@ -248,11 +264,19 @@
     },
     {
       "path": "README.md",
-      "sha256": "d60e96f8a07977d927cc100f39ed40a0cb4fdf062aae9bb9be3c59ed19412297"
+      "sha256": "279a3bfacb4502b61b8a3229a2b0fd5875c22675eef86c456f31f211f8da9c61"
+    },
+    {
+      "path": "scripts/backup-database-cron.sh",
+      "sha256": "9332e2652ea5ef15f79d244a472dedffb7b1c780d83806f405863aaab63dc9c4"
+    },
+    {
+      "path": "scripts/backup-project-cron.sh",
+      "sha256": "85cc5c1eb952db047d4bc2f19cfd8ba294b896bfafebf3d92bef1cbb95a84218"
     },
     {
       "path": "scripts/package-clean.mjs",
-      "sha256": "2a1c0925fcde63a126491221263170d273f65ba0b4b72435a7cc629f7cd6fc6d"
+      "sha256": "5c8ad4c8d2614acec67fafc4f490465fb9329fc3406a2106705e5011f7c65885"
     },
     {
       "path": "tests/access.test.mjs",
@@ -261,6 +285,10 @@
     {
       "path": "tests/assets.test.mjs",
       "sha256": "282b9162bcce7aebe502508a0180446108e9d7e33d966aeab22b36635fa67c82"
+    },
+    {
+      "path": "tests/database-backups.test.mjs",
+      "sha256": "8b9ee63a025e8a0cc214c5143b3f311542b7be93c9c5b0da363ce839c1a31817"
     },
     {
       "path": "tests/holder-status-repair.test.mjs",

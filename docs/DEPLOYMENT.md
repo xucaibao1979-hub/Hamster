@@ -47,4 +47,4 @@ docker compose -p asset-hub logs --tail=80 assets
 - IT小爱使用已验证企业微信身份请求 `/api/integration/identity`、`/api/integration/me`、`/api/integration/lookup`；领用提交后出现待审批申请，管理员批准后才更新资产。
 - 确认 `asset-hub_asset-data` 数据卷和 `.env` 已纳入私有备份计划。
 
-升级、回退及备份请继续阅读 [运维手册](OPERATIONS.md)。
+升级、回退及备份请继续阅读 [运维手册](OPERATIONS.md)。其中提供项目和数据库的 crontab 脚本，备份默认存放在项目目录外的 `/var/backups/asset-hub/`，各保留 30 天。

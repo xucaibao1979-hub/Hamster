@@ -5,10 +5,12 @@
 | 归档 | 内容 | 存放位置 |
 | --- | --- | --- |
 | 干净源码归档 | 代码、示例配置、测试、说明文档和文件哈希清单；不含真实数据 | 可存入私有 GitHub 仓库和制品库 |
-| 运行数据归档 | SQLite 数据卷、自动备份、账号资料以及单独的 `.env` | 仅存入受控的公司备份位置，不进入 GitHub |
+| 运行数据归档 | SQLite 数据卷、自动备份、账号资料和 `.env` | 仅存入受控的公司备份位置，不进入 GitHub |
 
 `node scripts/package-clean.mjs` 使用明确文件白名单生成源码归档，并输出 SHA-256；`SOURCE_MANIFEST.json` 记录每个源码文件的哈希。它不会复制工作目录下的 `outputs/`、`data/`、`node_modules/`、`.env`、运行日志或本地构建缓存。
 
 服务器 `/data/assets.sqlite` 才是正式资产数据；Windows 本地预览曾使用 `outputs/ui-preview/assets.sqlite`，两者不是同一数据库。源码归档不能代替运行数据备份。部署、升级与回退前必须使用 [运维手册](OPERATIONS.md) 单独备份数据卷并验证。
+
+服务器上的项目与数据库定时备份分别存放在 `/var/backups/asset-hub/project` 和 `/var/backups/asset-hub/database`，均在项目目录之外，默认只保留 30 天。前者包含 `.env`，必须限制读取权限；后者是可校验的 SQLite 快照。二者仍在同一台服务器，应再复制到异机或离线存储。
 
 发布前检查源码包中的文件列表与敏感信息，再记录：版本号、SHA-256、测试结果、部署时间、服务器上的 Compose 项目名、数据卷名和回退所需的上一个版本。不要把这些运行记录中的个人信息写入公开仓库。

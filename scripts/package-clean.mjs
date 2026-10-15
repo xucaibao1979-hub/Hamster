@@ -21,6 +21,8 @@ for(const entry of entries){
 }
 mkdirSync(join(stage,'scripts'));
 cpSync(join(root,'scripts','package-clean.mjs'),join(stage,'scripts','package-clean.mjs'));
+cpSync(join(root,'scripts','backup-database-cron.sh'),join(stage,'scripts','backup-database-cron.sh'));
+cpSync(join(root,'scripts','backup-project-cron.sh'),join(stage,'scripts','backup-project-cron.sh'));
 
 const forbidden=/(^|\/)(?:\.env(?:\..*)?|data|backups|outputs|node_modules|internal-dist|dist|\.git|\.next|\.openai|\.codex|\.agents)(?:\/|$)|\.(?:sqlite(?:-wal|-shm)?|db|pem|key|zip|tar\.gz)$/i;
 function files(dir){return readdirSync(dir,{withFileTypes:true}).flatMap(item=>{const path=join(dir,item.name);return item.isDirectory()?files(path):[path]})}

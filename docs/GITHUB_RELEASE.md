@@ -34,8 +34,8 @@ GitHub 官方的[导入本地代码说明](https://docs.github.com/en/migrations
 验证服务器与测试后，用版本号记录同一份源码，例如：
 
 ```bash
-git tag -a v2026.10.13 -m "Asset Hub release"
-git push origin v2026.10.13
+git tag -a v2026.10.15 -m "Hamster release"
+git push origin v2026.10.15
 ```
 
 将压缩包的 SHA-256、变更说明、升级步骤和验收结果写入 GitHub Release。之后继续在干净源码仓库维护代码与文档；数据库、业务备份和 `.env` 始终留在私有运维存储中。服务器升级说明见 [运维手册](OPERATIONS.md)。

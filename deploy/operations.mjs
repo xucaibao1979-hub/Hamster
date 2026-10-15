@@ -5,6 +5,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {validateBackup} from '../lib/restore.ts';
 import {validateAsset,statusValue,categoryValue,importDictionaries} from '../lib/assets.ts';
 import {allAttachments,initAttachments,validateAttachments} from './attachments.mjs';
+import {pruneBackups} from './backup-retention.mjs';
 
 export function initOperations(db){
  initAttachments(db);
@@ -78,11 +79,12 @@ export function restoreExtensions(db,raw){
 }
 export function backupManager(db,dir){
  const folder=join(dir,'automatic-backups');mkdirSync(folder,{recursive:true});
+ const filenamePattern=/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z-[0-9a-f-]{36}\.json$/;
  function verify(raw){validateFullBackup(raw);const restored=validateBackup(raw),test=new DatabaseSync(':memory:');try{test.exec('CREATE TABLE users(id TEXT PRIMARY KEY,name TEXT);CREATE TABLE asset_state(id TEXT PRIMARY KEY,revision INTEGER,data TEXT);');for(const u of db.prepare('SELECT id,name FROM users').all())test.prepare('INSERT INTO users VALUES (?,?)').run(u.id,u.name);test.prepare('INSERT INTO asset_state VALUES (?,0,?)').run('company',JSON.stringify(restored));initOperations(test);for(const e of employeeList(db))test.prepare('INSERT OR REPLACE INTO employees VALUES (?,?,?,?,?,?,?)').run(e.id,e.name,e.wecomUserId,e.department,e.active?1:0,e.loginUserId,e.legacy||0);test.exec('BEGIN');restoreExtensions(test,raw);const people=new Set(employeeList(test).map(e=>e.id));for(const a of restored.assets)if(a.holderEmployeeId&&!people.has(a.holderEmployeeId))throw new Error('资产关联员工缺失');test.exec('COMMIT');if(JSON.parse(test.prepare("SELECT data FROM asset_state WHERE id='company'").get().data).assets.length!==restored.assets.length)throw new Error('恢复演练数量不符');return {verified:true,restoreTest:true,assets:restored.assets.length,employees:employeeList(test).length}}finally{test.close()}}
- function create(){const data=JSON.stringify(fullBackup(db));verify(JSON.parse(data));const filename=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID()+'.json';const path=join(folder,filename);writeFileSync(path+'.tmp',data,{mode:0o600});renameSync(path+'.tmp',path);return {filename,verified:true,restoreTest:true,sha256:createHash('sha256').update(data).digest('hex')}}
- function list(){return readdirSync(folder).filter(f=>/^\d{4}.*\.json$/.test(f)).sort().reverse().map(filename=>({filename}))}
+ function create(){const data=JSON.stringify(fullBackup(db));verify(JSON.parse(data));const filename=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID()+'.json';const path=join(folder,filename);writeFileSync(path+'.tmp',data,{mode:0o600});renameSync(path+'.tmp',path);pruneBackups(folder,filenamePattern);return {filename,verified:true,restoreTest:true,sha256:createHash('sha256').update(data).digest('hex')}}
+ function list(){return readdirSync(folder).filter(f=>filenamePattern.test(f)).sort().reverse().map(filename=>({filename}))}
  function read(filename){if(!list().some(f=>f.filename===filename))throw new Error('备份不存在');return JSON.parse(readFileSync(join(folder,filename),'utf8'))}
- function daily(){if(!list().some(f=>f.filename.startsWith(new Date().toISOString().slice(0,10))))create()}
+ function daily(){if(!list().some(f=>f.filename.startsWith(new Date().toISOString().slice(0,10))))create();else pruneBackups(folder,filenamePattern)}
  return {create,list,read,daily,verify};
 }
 export function businessCommand(db,state,c,actor){

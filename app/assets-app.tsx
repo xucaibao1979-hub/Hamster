@@ -7,7 +7,7 @@ import {validateBackup} from '../lib/restore';
 import UsersPanel,{type Profile} from './users-panel';
 import DisplaySettings from './display-settings';
 import FieldDictionary from './field-dictionary';
-import {BackupPanel,AssetHistory,BusinessPanel,SyncPanel,IntegrationAdmins} from './operations-panels';
+import {BackupPanel,DatabaseBackupPanel,AssetHistory,BusinessPanel,SyncPanel,IntegrationAdmins} from './operations-panels';
 import AssetLabels from './asset-labels';
 import AssetAttachments from './asset-attachments';
 import {defaultDisplay,detailOrder,fieldName as baseFieldName,type DisplayPreferences} from '../lib/display';
@@ -64,6 +64,7 @@ export default function AssetsApp({email,profile={name:'管理员',email,role:'a
 
  {tab==='业务管理'&&admin&&<BusinessPanel state={s} mutate={mutate} onShowAsset={a=>setEdit(structuredClone(a))}/>}
  {tab==='基础设置'&&admin&&<BackupPanel onRestore={data=>{setRestoreEnvelope(data);setRestore(validateBackup(data));setRestoreConfirm('')}}/>}
+ {tab==='基础设置'&&admin&&<DatabaseBackupPanel/>}
  {tab==='用户管理'&&<UsersPanel profile={profile} onUpdated={load} onLogout={onLogout}/>}
  {tab==='操作日志'&&<section className="panel"><div className="panel-heading"><h2>操作审计</h2><div className="actions"><span>默认保留一年</span>{admin&&<button disabled={busy||!s.logs.length} onClick={()=>{setClearConfirm('');setClearLogs(true)}}>清空记录</button>}</div></div><div className="table-wrap"><table><thead><tr><th>操作时间</th><th>操作者</th><th>操作</th><th>详情</th></tr></thead><tbody>{s.logs.filter(l=>!['inventoryTaskScan','inventoryTaskSave','inventoryScan','inventoryUpdate'].includes(l.action)).slice(0,200).map(l=><tr key={l.id}><td>{new Date(l.time).toLocaleString('zh-CN')}</td><td>{l.actor}</td><td>{{save:'资产保存',delete:'删除资产',bulkDelete:'批量删除资产',inventoryTaskCreate:'新建盘点任务',inventoryTaskEnd:'结束盘点任务',import:'批量导入',dictionary:'字典维护',field:'新增字段',request:'流转申请',approve:'批准申请',reject:'拒绝申请',restore:'数据恢复',user:'用户管理',clearLogs:'清空记录',attachment:'资产附件',undoFlow:'撤销流转'}[l.action]||l.action}</td><td>{l.detail}</td></tr>)}</tbody></table>{!s.logs.length&&<div className="empty">暂无操作记录</div>}</div><p className="chart-note">页面展示最近 200 条；超过一年的记录由服务器自动清理，保留期内完整日志可通过数据备份导出。</p></section>}
  {tab==='集成中心'&&<>{admin&&<><SyncPanel/><IntegrationAdmins/></>}<div className="two-col"><section className="panel"><h2>对接准备</h2><p>已提供员工资料、企业微信 UserID 关联、可信服务鉴权、本人资产查询、幂等流转接口和持久化同步队列。</p><p>IT小爱 后端负责验证企业微信登录身份，再携带服务凭证调用资产系统。真实企业微信 OAuth 登录与消息推送需在公司配置提供后联调。</p><div className="hint">当前资产变更事件 <b>{s.events.length}</b></div></section><section className="panel"><h2>同步设计</h2><p>资产系统作为主数据源；IT小爱 提交流转申请，审批后同步资产状态与归属。每条事件带唯一 ID，供后续消费者做去重。</p><p>事件独立保存，配置投递地址后自动发送并失败重试。对方需按事件 ID 去重；真实平台接口尚待联调。</p><button onClick={()=>download('资产变更事件.json',JSON.stringify(s.events,null,2),'application/json')}><Download size={16}/>导出变更事件</button></section></div></>}

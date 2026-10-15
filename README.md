@@ -35,6 +35,8 @@ docker compose -p asset-hub logs --tail=80 assets
 
 完整步骤见 [Ubuntu/Docker 部署](docs/DEPLOYMENT.md)，升级、备份和回退见 [运维手册](docs/OPERATIONS.md)。
 
+服务器定时备份可通过 crontab 分别将数据库快照和部署项目归档保存到项目目录外的 `/var/backups/asset-hub/database` 与 `/var/backups/asset-hub/project`，默认保留 30 天。项目归档含 `.env`，仅用于受控运维存储；干净源码发布包不含 `.env` 和业务数据。
+
 ## 本地开发与验证
 
 安装 Node.js 24 和 pnpm 11.25.0 后：
@@ -56,3 +58,5 @@ node node_modules/typescript/bin/tsc --noEmit
 公开源码包不含 `.env`、SQLite 数据、备份、日志、员工资料、服务凭证或本地构建缓存。使用前自行配置管理员密码、服务凭证和网络访问控制。发布与归档方法见 [GitHub 发布指南](docs/GITHUB_RELEASE.md)。
 
 本项目未附加开源许可证。上传 GitHub 时先确认公司对源码和图片素材的公开授权；未获得授权时使用私有仓库。
+
+完整 SQLite 数据库会按日生成可验证快照，支持管理员下载；停机恢复步骤见 [运维手册](docs/OPERATIONS.md)。数据库快照与原库同处一个 Docker 数据卷，应另存到服务器之外。
