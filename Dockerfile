@@ -18,6 +18,8 @@ COPY deploy/server.mjs ./deploy/server.mjs
 COPY deploy/users.mjs ./deploy/users.mjs
 COPY deploy/access.mjs ./deploy/access.mjs
 COPY deploy/operations.mjs ./deploy/operations.mjs
+COPY deploy/attachments.mjs ./deploy/attachments.mjs
+COPY deploy/flow-undo.mjs ./deploy/flow-undo.mjs
 COPY deploy/sync.mjs ./deploy/sync.mjs
 COPY deploy/repair-holder-status.mjs ./deploy/repair-holder-status.mjs
 RUN mkdir /data && chown node:node /data

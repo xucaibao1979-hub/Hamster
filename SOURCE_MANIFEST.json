@@ -1,6 +1,6 @@
 {
-  "name": "asset-hub-source-2026.10.15-brand-1",
-  "createdAt": "2026-10-15T06:10:22.857Z",
+  "name": "asset-hub-source-2026.10.15-prod2",
+  "createdAt": "2026-10-15T06:25:28.406Z",
   "files": [
     {
       "path": ".dockerignore",
@@ -120,7 +120,7 @@
     },
     {
       "path": "Dockerfile",
-      "sha256": "afe5549f7a34b6243ad4cb9778af78af635f925456ae6abb925a6bff7282deb4"
+      "sha256": "8f7cafcbf0cef719d81485e87b17343da7605b939d6259611d028385dee09d91"
     },
     {
       "path": "docs/ARCHIVE.md",
@@ -248,7 +248,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "99126f848a94a6921331e06875f3d6e5e671a758c21e0fef2fb170bf9c85c440"
+      "sha256": "d60e96f8a07977d927cc100f39ed40a0cb4fdf062aae9bb9be3c59ed19412297"
     },
     {
       "path": "scripts/package-clean.mjs",
