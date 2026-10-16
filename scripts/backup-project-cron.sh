@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+umask 077
 PROJECT_DIR=${PROJECT_DIR:-/opt/asset-hub}
 BACKUP_DIR=${BACKUP_DIR:-/var/backups/asset-hub/project}
 RETENTION_DAYS=${RETENTION_DAYS:-30}
@@ -23,6 +24,7 @@ fi
 
 exec 9>"$BACKUP_DIR/.backup.lock"
 flock -n 9 || { echo '上一次项目备份仍在运行' >&2; exit 1; }
+echo "$(date -Is) 开始项目备份"
 
 umask 077
 filename="asset-hub-project-$(date -u +%Y-%m-%dT%H-%M-%SZ).tar.gz"

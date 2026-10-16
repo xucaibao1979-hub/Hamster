@@ -19,7 +19,11 @@ export async function backupDatabase(source,outputDir){
   renameSync(temporary,target);
   return {filename,bytes:statSync(target).size,...verified};
  }catch(error){rmSync(temporary,{force:true});throw error}
- finally{database.close()}
+ finally{
+  database.close();
+  rmSync(temporary+'-wal',{force:true});
+  rmSync(temporary+'-shm',{force:true});
+ }
 }
 
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){

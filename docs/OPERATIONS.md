@@ -41,7 +41,7 @@ docker compose -p asset-hub logs --tail=100 assets
 ```bash
 cd /opt/asset-hub
 docker compose -p asset-hub build assets
-chmod +x scripts/backup-database-cron.sh scripts/backup-project-cron.sh
+sudo chmod 700 scripts/backup-database-cron.sh scripts/backup-project-cron.sh
 sudo bash scripts/backup-database-cron.sh
 sudo bash scripts/backup-project-cron.sh
 sudo ls -lh /var/backups/asset-hub/database/*.sqlite
@@ -54,14 +54,18 @@ sudo ls -lh /var/backups/asset-hub/project/*.tar.gz
 sudo crontab -e
 ```
 
-加入下面一行，保存退出：
+加入下面两行，保存退出：
 
 ```cron
 30 2 * * * /opt/asset-hub/scripts/backup-database-cron.sh >> /var/log/asset-hub-db-backup.log 2>&1
 45 2 * * * /opt/asset-hub/scripts/backup-project-cron.sh >> /var/log/asset-hub-project-backup.log 2>&1
 ```
 
+保存后执行 `sudo systemctl restart cron`，并用 `systemctl is-active cron` 确认服务为 `active`。如果次日未生成备份，先检查 `sudo crontab -l`、两份日志和 `sudo journalctl -u cron --since today`：没有对应时间的 `CMD` 记录表示 cron 未调度到脚本；有 `CMD` 但备份失败则查看脚本日志。可随时运行 `sudo bash /opt/asset-hub/scripts/backup-database-cron.sh` 和 `sudo bash /opt/asset-hub/scripts/backup-project-cron.sh` 验证脚本本身。数据库快照验证产生的临时 `-wal/-shm` 文件由新版脚本自动清理。
+
 两个脚本默认只保留 30 天；可在 crontab 命令前设置 `RETENTION_DAYS=90`。成功生成并验证新备份后才清理超过保留期的旧文件。检查最近结果：
+
+crontab 按**服务器本地时区**执行；备份文件名使用 **UTC**。例如北京时间 10 月 16 日凌晨 02:30 生成的文件名可能以 `2026-10-15T18-30` 开头，应通过文件修改时间和日志确认实际生成时间。脚本由 root crontab 执行，权限必须为 `700`，不能设置为 `777`。
 
 ```bash
 sudo tail -n 30 /var/log/asset-hub-db-backup.log

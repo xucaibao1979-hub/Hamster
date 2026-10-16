@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+umask 077
 PROJECT_DIR=${PROJECT_DIR:-/opt/asset-hub}
 BACKUP_DIR=${BACKUP_DIR:-/var/backups/asset-hub/database}
 RETENTION_DAYS=${RETENTION_DAYS:-30}
@@ -24,10 +25,12 @@ fi
 # 同一服务器上的定时任务不可重叠执行。
 exec 9>"$BACKUP_DIR/.backup.lock"
 flock -n 9 || { echo '上一次数据库备份仍在运行' >&2; exit 1; }
+echo "$(date -Is) 开始数据库备份"
 
 docker compose -p asset-hub run --rm --no-deps --user root \
   -v "$BACKUP_DIR:/backup" --entrypoint node assets \
   deploy/backup-database.mjs /backup
+echo "$(date -Is) 数据库备份完成"
 
 # 只有新快照生成并验证成功后才清理过期文件；仅匹配本脚本生成的 SQLite 文件。
 find "$BACKUP_DIR" -maxdepth 1 -type f \

@@ -41,6 +41,7 @@ export function databaseBackupManager(database,dataDir){
     pruneBackups(folder,filenamePattern);
     return {filename,bytes:statSync(target).size,...result};
    }catch(error){if(existsSync(temporary))rmSync(temporary,{force:true});throw error}
+   finally{rmSync(temporary+'-wal',{force:true});rmSync(temporary+'-shm',{force:true})}
   })().finally(()=>{running=null});
   return running;
  }

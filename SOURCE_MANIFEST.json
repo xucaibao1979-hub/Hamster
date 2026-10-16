@@ -1,6 +1,6 @@
 {
-  "name": "asset-hub-source-2026.10.15-github-external-backups",
-  "createdAt": "2026-10-15T09:36:02.364Z",
+  "name": "asset-hub-source-2026.10.16-cron-fix",
+  "createdAt": "2026-10-16T01:41:39.270Z",
   "files": [
     {
       "path": ".dockerignore",
@@ -68,7 +68,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "107aaa25a5711a29d89ffac170e6ada40d8b268fbea337a65094efab127fd637"
+      "sha256": "6ce503db8dfbb6ad910d7bca6f8fbf1a2c72b0c43b825e8f8ce4a4b3c46aebc2"
     },
     {
       "path": "compose.yaml",
@@ -84,7 +84,7 @@
     },
     {
       "path": "deploy/backup-database.mjs",
-      "sha256": "755cf8f4b329ffb9b0754713635e4ed31a2495aae060c0667d17bc040351f680"
+      "sha256": "eaed447a005531c29283a7f9a86876400c6f53caac32db79e3518b5a97b9df90"
     },
     {
       "path": "deploy/backup-retention.mjs",
@@ -100,7 +100,7 @@
     },
     {
       "path": "deploy/database-backups.mjs",
-      "sha256": "891d35291175d38480f3c1671c2d54fb0cbd884be159c136386823b9fc86a10e"
+      "sha256": "07d9944e6b5f53d69d202faf55a561a595eea9d7d4a59fbdb3150845a8e2a34c"
     },
     {
       "path": "deploy/env.example",
@@ -168,7 +168,7 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "sha256": "a1aa6b772e8b1696d47d3ad24d493a173fab42746bc171903bcf8d30918a2a6a"
+      "sha256": "a57d0a35c8fc61b9ae59ca36c703e6be64be088cbf5d8806c748483e41a60e5c"
     },
     {
       "path": "lib/aging.ts",
@@ -268,11 +268,11 @@
     },
     {
       "path": "scripts/backup-database-cron.sh",
-      "sha256": "9332e2652ea5ef15f79d244a472dedffb7b1c780d83806f405863aaab63dc9c4"
+      "sha256": "b862d323f2ce62f2db2a66edb8ef5c5293053f3a3d06b1d49da133ecd8cf989d"
     },
     {
       "path": "scripts/backup-project-cron.sh",
-      "sha256": "85cc5c1eb952db047d4bc2f19cfd8ba294b896bfafebf3d92bef1cbb95a84218"
+      "sha256": "4ef0fc7b901e4b811d2081c177a5d26cb39660057f7d9026a74e071fd4897b99"
     },
     {
       "path": "scripts/package-clean.mjs",
@@ -288,7 +288,7 @@
     },
     {
       "path": "tests/database-backups.test.mjs",
-      "sha256": "8b9ee63a025e8a0cc214c5143b3f311542b7be93c9c5b0da363ce839c1a31817"
+      "sha256": "17463a595a95ba363982a370a7f818d49e69a28f2f5afdf2a7ea8161b3820a2d"
     },
     {
       "path": "tests/holder-status-repair.test.mjs",

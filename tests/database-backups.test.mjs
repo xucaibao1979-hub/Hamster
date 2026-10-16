@@ -42,6 +42,8 @@ test('服务器定时备份可在 WAL 写入期间生成可恢复的宿主机快
   const result=await backupDatabase(path,join(dir,'host-backups'));
   assert.equal(result.assets,1);
   assert.equal(validateDatabaseFile(join(dir,'host-backups',result.filename)).users,1);
+  assert.equal(existsSync(join(dir,'host-backups',result.filename+'.tmp-shm')),false);
+  assert.equal(existsSync(join(dir,'host-backups',result.filename+'.tmp-wal')),false);
   db.close();
  }finally{rmSync(dir,{recursive:true,force:true})}
 });
