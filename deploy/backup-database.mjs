@@ -1,15 +1,15 @@
 import {backup,DatabaseSync} from 'node:sqlite';
-import {randomUUID} from 'node:crypto';
 import {chmodSync,existsSync,mkdirSync,renameSync,rmSync,statSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {validateDatabaseFile} from './database-backups.mjs';
+import {nextDatabaseBackupFilename} from './backup-filenames.mjs';
 
 export async function backupDatabase(source,outputDir){
  const input=resolve(source),folder=resolve(outputDir);
  if(!existsSync(input))throw new Error('数据库文件不存在：'+input);
  mkdirSync(folder,{recursive:true,mode:0o700});
- const filename=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID()+'.sqlite';
+ const filename=nextDatabaseBackupFilename(folder);
  const target=resolve(folder,filename),temporary=target+'.tmp';
  const database=new DatabaseSync(input,{readOnly:true});
  try{

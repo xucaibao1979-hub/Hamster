@@ -35,5 +35,8 @@ echo "$(date -Is) 数据库备份完成"
 # 只有新快照生成并验证成功后才清理过期文件；仅匹配本脚本生成的 SQLite 文件。
 find "$BACKUP_DIR" -maxdepth 1 -type f \
   -regextype posix-extended \
-  -regex '.*/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{3}Z-[0-9a-f-]{36}\.sqlite' \
+  -regex '.*/(asset-hub-database-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}Z(-[0-9]+)?|[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{3}Z-[0-9a-f-]{36})\.sqlite' \
   -mmin +"$((RETENTION_DAYS * 24 * 60))" -delete
+
+find "$BACKUP_DIR" -maxdepth 1 -type f \
+  \( -name '*.sqlite.tmp-shm' -o -name '*.sqlite.tmp-wal' \) -delete

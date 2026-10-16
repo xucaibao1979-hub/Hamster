@@ -4,6 +4,7 @@
 
 - 定时备份脚本增加开始、完成时间日志；文档补充 cron 重载和故障检查步骤。
 - 清理数据库快照验证过程留下的临时 SQLite `-wal/-shm` 文件。
+- 数据库快照统一命名为 `asset-hub-database-YYYY-MM-DDTHH-MM-SSZ.sqlite`，旧命名仍可识别、验证和按保留期清理。
 
 ## 2026-10-15
 

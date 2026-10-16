@@ -1,10 +1,8 @@
 import {createReadStream, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, chmodSync} from 'node:fs';
 import {join} from 'node:path';
-import {randomUUID} from 'node:crypto';
 import {backup, DatabaseSync} from 'node:sqlite';
 import {pruneBackups} from './backup-retention.mjs';
-
-const filenamePattern=/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z-[0-9a-f-]{36}\.sqlite$/;
+import {backupMatchesUtcDay,databaseBackupFilenamePattern,nextDatabaseBackupFilename} from './backup-filenames.mjs';
 
 export function validateDatabaseFile(path){
  const database=new DatabaseSync(path,{readOnly:true});
@@ -25,27 +23,27 @@ export function validateDatabaseFile(path){
 export function databaseBackupManager(database,dataDir){
  const folder=join(dataDir,'database-backups');mkdirSync(folder,{recursive:true,mode:0o700});
  let running=null;
- function list(){return readdirSync(folder).filter(name=>filenamePattern.test(name)).sort().reverse().map(filename=>({filename,bytes:statSync(join(folder,filename)).size}))}
- function filePath(filename){if(!filenamePattern.test(String(filename||''))||!list().some(item=>item.filename===filename))throw new Error('数据库备份不存在');return join(folder,filename)}
+ function list(){return readdirSync(folder).filter(name=>databaseBackupFilenamePattern.test(name)).map(filename=>({filename,bytes:statSync(join(folder,filename)).size,modified:statSync(join(folder,filename)).mtimeMs})).sort((a,b)=>b.modified-a.modified).map(({filename,bytes})=>({filename,bytes}))}
+ function filePath(filename){if(!databaseBackupFilenamePattern.test(String(filename||''))||!list().some(item=>item.filename===filename))throw new Error('数据库备份不存在');return join(folder,filename)}
  function verify(filename){return validateDatabaseFile(filePath(filename))}
  function create(){
   if(running)return running;
   running=(async()=>{
-   const filename=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID()+'.sqlite';
+   const filename=nextDatabaseBackupFilename(folder);
    const target=join(folder,filename),temporary=target+'.tmp';
    try{
     await backup(database,temporary);
     const result=validateDatabaseFile(temporary);
     chmodSync(temporary,0o600);
     renameSync(temporary,target);
-    pruneBackups(folder,filenamePattern);
+    pruneBackups(folder,databaseBackupFilenamePattern);
     return {filename,bytes:statSync(target).size,...result};
    }catch(error){if(existsSync(temporary))rmSync(temporary,{force:true});throw error}
    finally{rmSync(temporary+'-wal',{force:true});rmSync(temporary+'-shm',{force:true})}
   })().finally(()=>{running=null});
   return running;
  }
- async function daily(){if(!list().some(item=>item.filename.startsWith(new Date().toISOString().slice(0,10))))return create();pruneBackups(folder,filenamePattern);return null}
+ async function daily(){if(!list().some(item=>backupMatchesUtcDay(item.filename,new Date().toISOString().slice(0,10))))return create();pruneBackups(folder,databaseBackupFilenamePattern);return null}
  function stream(filename){return createReadStream(filePath(filename))}
  return {folder,list,filePath,verify,create,daily,stream};
 }

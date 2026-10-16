@@ -8,6 +8,7 @@ import {databaseBackupManager,validateDatabaseFile} from '../deploy/database-bac
 import {restoreDatabase} from '../deploy/restore-database.mjs';
 import {backupDatabase} from '../deploy/backup-database.mjs';
 import {pruneBackups} from '../deploy/backup-retention.mjs';
+import {backupMatchesUtcDay,databaseBackupFilenamePattern,nextDatabaseBackupFilename} from '../deploy/backup-filenames.mjs';
 
 test('完整数据库快照包含账号和资产，验证后可离线恢复',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'asset-db-backup-'));
@@ -17,6 +18,7 @@ test('完整数据库快照包含账号和资产，验证后可离线恢复',asy
   db.prepare('INSERT INTO asset_state VALUES (?,0,?)').run('company',JSON.stringify({assets:[{number:'A001'}]}));
   db.prepare('INSERT INTO users VALUES (?,?)').run('admin','admin');
   const manager=databaseBackupManager(db,dir),snapshot=await manager.create();
+  assert.match(snapshot.filename,/^asset-hub-database-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z\.sqlite$/);
   assert.equal(snapshot.assets,1);assert.equal(snapshot.users,1);
   assert.equal(manager.verify(snapshot.filename).verified,true);
   assert.equal(manager.list().length,1);
@@ -40,11 +42,26 @@ test('服务器定时备份可在 WAL 写入期间生成可恢复的宿主机快
   db.prepare('INSERT INTO asset_state VALUES (?,?)').run('company',JSON.stringify({assets:[{number:'001'}]}));
   db.prepare('INSERT INTO users VALUES (?)').run('admin');
   const result=await backupDatabase(path,join(dir,'host-backups'));
+  assert.match(result.filename,/^asset-hub-database-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z\.sqlite$/);
   assert.equal(result.assets,1);
   assert.equal(validateDatabaseFile(join(dir,'host-backups',result.filename)).users,1);
   assert.equal(existsSync(join(dir,'host-backups',result.filename+'.tmp-shm')),false);
   assert.equal(existsSync(join(dir,'host-backups',result.filename+'.tmp-wal')),false);
   db.close();
+ }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
+test('数据库备份命名兼容旧文件，并避免同秒覆盖',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'asset-backup-filename-'));
+ try{
+  const now=new Date('2026-10-16T01:41:06.927Z');
+  const first=nextDatabaseBackupFilename(dir,now);
+  assert.equal(first,'asset-hub-database-2026-10-16T01-41-06Z.sqlite');
+  writeFileSync(join(dir,first),'existing');
+  assert.equal(nextDatabaseBackupFilename(dir,now),'asset-hub-database-2026-10-16T01-41-06Z-2.sqlite');
+  assert.equal(databaseBackupFilenamePattern.test(first),true);
+  assert.equal(databaseBackupFilenamePattern.test('2026-10-15T09-35-59-539Z-40f23914-f7c6-4ae4-a4f7-74b65a88de5d.sqlite'),true);
+  assert.equal(backupMatchesUtcDay(first,'2026-10-16'),true);
  }finally{rmSync(dir,{recursive:true,force:true})}
 });
 

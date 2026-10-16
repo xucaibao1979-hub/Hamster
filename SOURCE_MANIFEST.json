@@ -1,6 +1,6 @@
 {
-  "name": "asset-hub-source-2026.10.16-cron-fix",
-  "createdAt": "2026-10-16T01:41:39.270Z",
+  "name": "asset-hub-source-2026.10.16-backup-names",
+  "createdAt": "2026-10-16T01:50:09.814Z",
   "files": [
     {
       "path": ".dockerignore",
@@ -68,7 +68,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "6ce503db8dfbb6ad910d7bca6f8fbf1a2c72b0c43b825e8f8ce4a4b3c46aebc2"
+      "sha256": "88ac5ba3bb347f1eb48217d1bd3e514dc19b1f6a28961a5ad5c6e068ed215983"
     },
     {
       "path": "compose.yaml",
@@ -84,7 +84,11 @@
     },
     {
       "path": "deploy/backup-database.mjs",
-      "sha256": "eaed447a005531c29283a7f9a86876400c6f53caac32db79e3518b5a97b9df90"
+      "sha256": "116ea30da7854444a367128d27712a62b6f2a25d3c2d33baca5d8e2422f9ce8e"
+    },
+    {
+      "path": "deploy/backup-filenames.mjs",
+      "sha256": "11922f609007091445eeaaa05f84308cb39391dbb6641aa075767e5d2e991c9d"
     },
     {
       "path": "deploy/backup-retention.mjs",
@@ -100,7 +104,7 @@
     },
     {
       "path": "deploy/database-backups.mjs",
-      "sha256": "07d9944e6b5f53d69d202faf55a561a595eea9d7d4a59fbdb3150845a8e2a34c"
+      "sha256": "a3611ef3325faddcb3e2ff13412dd3cf762bc5394f6e0ed5a9ef0750814f84ac"
     },
     {
       "path": "deploy/env.example",
@@ -136,7 +140,7 @@
     },
     {
       "path": "Dockerfile",
-      "sha256": "70b97dcfe97219669e585effae5ca55f36c1b2ace79d652b47ca8510575591a2"
+      "sha256": "2c767aff62b3c3d166b339f056dc02eb6b9c1e849da70c6d69f24cd2f38dade4"
     },
     {
       "path": "docs/ARCHIVE.md",
@@ -168,7 +172,7 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "sha256": "a57d0a35c8fc61b9ae59ca36c703e6be64be088cbf5d8806c748483e41a60e5c"
+      "sha256": "252c60b2f169e208eb69d683c89304ca839e419b045257b703ac42e71d99f1a0"
     },
     {
       "path": "lib/aging.ts",
@@ -268,7 +272,7 @@
     },
     {
       "path": "scripts/backup-database-cron.sh",
-      "sha256": "b862d323f2ce62f2db2a66edb8ef5c5293053f3a3d06b1d49da133ecd8cf989d"
+      "sha256": "1f9f0396c44730073d681a9738be992613ad996782350253f6a90f7d6713e58b"
     },
     {
       "path": "scripts/backup-project-cron.sh",
@@ -288,7 +292,7 @@
     },
     {
       "path": "tests/database-backups.test.mjs",
-      "sha256": "17463a595a95ba363982a370a7f818d49e69a28f2f5afdf2a7ea8161b3820a2d"
+      "sha256": "0354c18e69a2bf0ad0bbc90756c542af93bb08e71974692f6ec6f6cb3d88c6f4"
     },
     {
       "path": "tests/holder-status-repair.test.mjs",

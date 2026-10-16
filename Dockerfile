@@ -21,6 +21,7 @@ COPY deploy/operations.mjs ./deploy/operations.mjs
 COPY deploy/attachments.mjs ./deploy/attachments.mjs
 COPY deploy/flow-undo.mjs ./deploy/flow-undo.mjs
 COPY deploy/database-backups.mjs ./deploy/database-backups.mjs
+COPY deploy/backup-filenames.mjs ./deploy/backup-filenames.mjs
 COPY deploy/backup-retention.mjs ./deploy/backup-retention.mjs
 COPY deploy/backup-database.mjs ./deploy/backup-database.mjs
 COPY deploy/restore-database.mjs ./deploy/restore-database.mjs
