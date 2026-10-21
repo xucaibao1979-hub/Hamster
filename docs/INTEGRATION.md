@@ -1,6 +1,35 @@
 # IT小爱 / 企业微信接入
 
+网页登录免密流程、管理员授权及故障排查另见 [免密认证使用手册](SSO.md)。
+
 资盒是资产主数据源。IT小爱后端应先验证企业微信会话，从可信身份取得 UserID 与姓名，然后在服务端调用资盒接口。浏览器传来的姓名、UserID 或 `/api/integration/me` 的查询参数不能作为查询他人资产的权限依据。
+
+## IT小爱跳转资盒网页免登
+
+IT小爱后端在完成自己的企业微信身份验证与入口授权后，调用资盒换票接口。资盒 `.env` 必须配置 `APP_ORIGIN=https://zchub.saybot.net` 和与现有集成接口相同的 `IT_SERVICE_TOKEN`（至少 32 位）。员工应先经通讯录同步至资盒，保持在职并绑定企业微信 UserID；只传姓名不能免登。
+
+```http
+POST https://zchub.saybot.net/api/sso/ticket
+Authorization: Bearer <IT_SERVICE_TOKEN>
+X-WeCom-UserId: A0264
+X-WeCom-Name: %E5%BE%90%E6%89%8D%E5%AE%9D
+X-WeCom-Department: 326
+Content-Type: application/json
+
+{}
+```
+
+成功时返回 HTTP 200：
+
+```json
+{"loginUrl":"https://zchub.saybot.net/sso/consume?ticket=<一次性票据>","expiresIn":60}
+```
+
+IT小爱把 `loginUrl` 交给当前用户的企业微信内置浏览器或电脑浏览器打开。`GET /sso/consume?ticket=...` 会原子核销票据，写入 `Secure; HttpOnly; SameSite=Lax` 网页会话 Cookie，并以 HTTP 303 跳转到 `/`，从地址栏移除票据。票据有效期 60 秒且只能使用一次；服务器重启后未兑换票据失效。资盒不返回 HTTP 重定向作为换票响应。
+
+无效服务凭证返回 401；未登记、停用的 UserID 或其关联账号已停用返回 403；其他失败以包含 `error` 的 JSON 返回。服务端依据 UserID 对应的资盒员工记录决定身份，姓名和部门请求头只作辅助信息。资盒“集成中心”内已授权的企业微信管理员进入网页时拥有资盒管理员权限；普通在职员工仅能查看本人资产。若员工关联了本地登录账号，该账号的角色仍可授予管理员权限。管理员授权和撤销在每次网页请求时重新核对，撤销后已有会话立即失去管理员权限。
+
+IT小爱服务器配置 `HAMSTER_SSO_TICKET_URL=https://zchub.saybot.net/api/sso/ticket`，请求头的长期凭证仅放服务端，不能写入网页或跳转 URL。请将反向代理对 `/sso/consume` 的访问日志配置为不记录查询参数，以免日志留存一次性票据。资盒网页登录须走 HTTPS；手机和电脑企业微信均需分别联调 Cookie 与跳转。
 
 资产附件、字段类型配置、时长提醒和本地审批快捷撤销均由资盒管理员网页管理；本次升级不改变 `/api/integration/*` 的请求参数、服务凭证、员工身份校验和审批规则。快捷撤销仅对资盒网页完成的本地审批开放，IT小爱审批继续沿用原接口与流程。
 

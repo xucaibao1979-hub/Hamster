@@ -28,6 +28,8 @@ IT_SYNC_TOKEN=
 
 `APP_ORIGIN` 必须与浏览器实际使用的协议、域名和端口完全一致，不包含路径和末尾斜杠；HTTP 测试时将 `COOKIE_SECURE=false`。`IT_SERVICE_TOKEN` 为可选的至少 32 位随机字符串，配置后才能调用 IT小爱接口；只保存在双方后端。不要把服务凭证放进浏览器代码或 Git 仓库。
 
+IT小爱网页免登要求 `APP_ORIGIN` 为正式 HTTPS 域名，例如 `https://zchub.saybot.net`。资盒的 `POST /api/sso/ticket` 与现有集成接口共用 `IT_SERVICE_TOKEN`；员工须先同步企业微信 UserID。换票和浏览器兑换方式见 [IT小爱接入说明](INTEGRATION.md)。发布后请分别用手机、电脑企业微信验证跳转；反向代理访问日志应避免记录 `/sso/consume` 的查询参数。
+
 ```bash
 docker compose -p asset-hub up -d --build assets
 docker compose -p asset-hub ps

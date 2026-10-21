@@ -1,6 +1,6 @@
 {
-  "name": "asset-hub-source-2026.10.16-backup-names",
-  "createdAt": "2026-10-16T01:50:09.814Z",
+  "name": "asset-hub-source-2026.10.21-sso-admin-docs",
+  "createdAt": "2026-10-21T10:50:38.402Z",
   "files": [
     {
       "path": ".dockerignore",
@@ -56,7 +56,7 @@
     },
     {
       "path": "app/operations-panels.tsx",
-      "sha256": "803e790ef32347025fa9cb562b679ee793e9fe15ebc4d4a132ca0c163d7319a4"
+      "sha256": "0a4a5834b2a71707cd1381332d7bf071ae8fe9807ee8a3e47562cdbebc6263c4"
     },
     {
       "path": "app/page.tsx",
@@ -64,11 +64,11 @@
     },
     {
       "path": "app/users-panel.tsx",
-      "sha256": "3b214698d9869b22f7f622e2f80c01926fc6d97c27d839367c1113fa9ea34f0c"
+      "sha256": "2c9e8c98fd3db8e05c0781cebc0abf9174e55ae19fb6dbe4dd05a1a1aa1d218b"
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "88ac5ba3bb347f1eb48217d1bd3e514dc19b1f6a28961a5ad5c6e068ed215983"
+      "sha256": "c0c2105a1c218477f2c4b8d421d2fc2c76ec1e28523fb94e71868b7194ce9a00"
     },
     {
       "path": "compose.yaml",
@@ -76,7 +76,7 @@
     },
     {
       "path": "deploy/access.mjs",
-      "sha256": "a35d24d00009f989a8a809a1d1d43c13e7af736bb25d70c7b249d69abe9e4251"
+      "sha256": "d974f1fd616a7c201a7a2aaf8b97e8d095b36c4c7c730e2389418ce8f1eb0a62"
     },
     {
       "path": "deploy/attachments.mjs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "deploy/server.mjs",
-      "sha256": "10c636e4cee7dc42f0b1da6f68a1aefa12a343bd1169b15294232156961d0964"
+      "sha256": "438916e7dfe7a95f77423bf8d581e12306b03b56b5b8bcc653a65207b6c319f6"
     },
     {
       "path": "deploy/sync.mjs",
@@ -148,7 +148,7 @@
     },
     {
       "path": "docs/DEPLOYMENT.md",
-      "sha256": "96405088db697abaf8aebd96c0aa06d81937fc2b76bafec8a9bd498f8273d9a8"
+      "sha256": "8b5a0651a0b8fd1513a115e8b15f59a3945164b37dd860e9ffaa115ceb54d1c0"
     },
     {
       "path": "docs/FEATURES.md",
@@ -168,11 +168,15 @@
     },
     {
       "path": "docs/INTEGRATION.md",
-      "sha256": "6cbadbefa075324dc0fae07a8ce87ae6093c248023a47989ba1365f41d227667"
+      "sha256": "1534fe2f29ed1c804b42edfae19497befffc58c966b25036474cbb83db6b866e"
     },
     {
       "path": "docs/OPERATIONS.md",
       "sha256": "252c60b2f169e208eb69d683c89304ca839e419b045257b703ac42e71d99f1a0"
+    },
+    {
+      "path": "docs/SSO.md",
+      "sha256": "e240779596a51d822c7dff27fc3dc0f3c1479ebfe4dbdd0234fce9f205c20930"
     },
     {
       "path": "lib/aging.ts",
@@ -228,7 +232,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "589cb19474764d70dc5e6d49465783ec7ace6d0ef43daaccdf4b984de56780fb"
+      "sha256": "5c597f01cd626c49440a665a0b995d31736731518ed6b32cf334565ad4e1e8f2"
     },
     {
       "path": "pnpm-lock.yaml",
@@ -268,7 +272,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "279a3bfacb4502b61b8a3229a2b0fd5875c22675eef86c456f31f211f8da9c61"
+      "sha256": "e2edfcf1ec7d051b28ca9c5b4d4cc206608f3b95304c513ff27a27a4b1120fc6"
     },
     {
       "path": "scripts/backup-database-cron.sh",
@@ -301,6 +305,10 @@
     {
       "path": "tests/server.test.mjs",
       "sha256": "e6e4630950fb846cbb6bc2de502fab4d3349ef24dedcef7f8d40a0f75958f6e6"
+    },
+    {
+      "path": "tests/sso.test.mjs",
+      "sha256": "d0a1fde737f5eefd10a7c60849dfa5ba6c96acac2ec8ef381ec13ab30808bc40"
     },
     {
       "path": "tests/sync.test.mjs",

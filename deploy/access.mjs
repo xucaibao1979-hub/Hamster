@@ -10,9 +10,9 @@ export function ownAssets(state,user,people=[]){
  const uniqueName=!!user.employeeId&&!!name&&people.filter(e=>e.enabled&&e.name.trim()===name).length===1;
  return state.assets.filter(a=>a.holderEmployeeId?!!user.employeeId&&a.holderEmployeeId===user.employeeId:a.holderUserId?a.holderUserId===user.id:uniqueName&&!a.holderUsername&&String(a.holder||'').trim()===name);
 }
-export function scopedState(state,user){
+export function scopedState(state,user,people=[]){
  if(user.role==='admin')return state;
- const assets=ownAssets(state,user);const base=initial();const dictionaries={...state.dictionaries};
+ const assets=ownAssets(state,user,people);const base=initial();const dictionaries={...state.dictionaries};
  for(const k of ['category','ownership','type'])dictionaries[k]=state.dictionaries[k].filter(v=>assets.some(a=>a[k]===v)||base.dictionaries[k].includes(v));
  return {...state,deletedAssets:[],assets,dictionaries,requests:state.requests.filter(r=>(!!user.employeeId&&(r.toEmployeeId===user.employeeId||r.fromEmployeeId===user.employeeId))||r.toUserId===user.id||r.fromUserId===user.id),logs:[],events:[]};
 }

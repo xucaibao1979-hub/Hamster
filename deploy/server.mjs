@@ -2,7 +2,7 @@ import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {resolve,join} from 'node:path';
-import {randomBytes,randomUUID,timingSafeEqual} from 'node:crypto';
+import {createHash,randomBytes,randomUUID,timingSafeEqual} from 'node:crypto';
 import {initUsers,verifyPassword,publicUser,userList,userCommand} from './users.mjs';
 import {initPreferences,readDisplay,saveDisplay,directory,hydrate,scopedState,ownAssets,resolveCommand} from './access.mjs';
 import {initial,command,statusValue,claimBlockReason,effectiveHolder} from '../lib/assets.ts';
@@ -24,19 +24,38 @@ setInterval(()=>databaseBackups.daily().catch(e=>console.error('每日数据库�
 function retainLogs(state){const cutoff=new Date();cutoff.setUTCFullYear(cutoff.getUTCFullYear()-1);state.logs=state.logs.filter(l=>new Date(l.time)>=cutoff);return state}
 function expireLogs(){const row=db.prepare('SELECT data,revision FROM asset_state WHERE id=?').get('company');const state=JSON.parse(row.data);const count=state.logs.length;retainLogs(state);if(count!==state.logs.length)db.prepare('UPDATE asset_state SET data=?,revision=revision+1 WHERE id=? AND revision=?').run(JSON.stringify(state),'company',row.revision)}
 expireLogs();setInterval(expireLogs,3600_000).unref();
-const sessions=new Map(),attempts=new Map();const sessionTTL=8*3600_000;
+const sessions=new Map(),attempts=new Map(),ssoTickets=new Map();const sessionTTL=8*3600_000,ssoTicketTTL=60_000;
 const files={ '/': ['index.html','text/html;charset=utf-8'], '/app.js':['app.js','text/javascript;charset=utf-8'], '/app.css':['app.css','text/css;charset=utf-8'], '/brand.png':['brand.png','image/png'], '/concierge.png':['concierge.png','image/png'] };
 const staticDir=resolve('internal-dist');
 function json(res,status,data){res.writeHead(status,{'Content-Type':'application/json;charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))}
 async function body(req,maxBytes=32_000_000){let text='';for await(const c of req){text+=c;if(Buffer.byteLength(text)>maxBytes)throw new Error('请求超过允许大小')}return JSON.parse(text)}
-function auth(req){const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('asset_session='))?.slice(14);const session=token&&sessions.get(token);if(!session||session.expires<Date.now()){if(token)sessions.delete(token);return null}const account=db.prepare('SELECT * FROM users WHERE id=? AND enabled=1').get(session.id);if(!account){sessions.delete(token);return null}const employee=db.prepare('SELECT id FROM employees WHERE loginUserId=? AND active=1').get(account.id);return {token,...publicUser(account),employeeId:employee?.id}}
+function serviceAuthorized(req){const expected=process.env.IT_SERVICE_TOKEN||'',provided=(req.headers.authorization||'').replace(/^Bearer /,'');return expected.length>=32&&provided.length===expected.length&&timingSafeEqual(Buffer.from(provided),Buffer.from(expected))}
+function ssoUser(employee){if(!employee?.active)return null;const account=employee.loginUserId?db.prepare('SELECT * FROM users WHERE id=? AND enabled=1').get(employee.loginUserId):null;if(employee.loginUserId&&!account)return null;const integrationAdmin=!!db.prepare('SELECT 1 FROM integration_admins WHERE wecomUserId=?').get(employee.wecomUserId);return account?{...publicUser(account),employeeId:employee.id,role:integrationAdmin?'admin':account.role,integrationAdmin,sso:true}:{id:'wecom:'+employee.id,employeeId:employee.id,name:employee.name,username:employee.wecomUserId,email:'',role:integrationAdmin?'admin':'viewer',integrationAdmin,sso:true}}
+function auth(req){const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('asset_session='))?.slice(14);const session=token&&sessions.get(token);if(!session||session.expires<Date.now()){if(token)sessions.delete(token);return null}if(session.employeeId){const employee=db.prepare('SELECT * FROM employees WHERE id=?').get(session.employeeId),principal=ssoUser(employee);if(!principal){sessions.delete(token);return null}return {token,...principal}}const account=db.prepare('SELECT * FROM users WHERE id=? AND enabled=1').get(session.id);if(!account){sessions.delete(token);return null}const employee=db.prepare('SELECT id FROM employees WHERE loginUserId=? AND active=1').get(account.id);return {token,...publicUser(account),employeeId:employee?.id}}
 const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','same-origin');res.setHeader('Content-Security-Policy',"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'");
  const url=new URL(req.url,'http://localhost');const path=url.pathname;
  try{
   if(req.method==='POST'){
    const origin=req.headers.origin;const allowed=process.env.APP_ORIGIN;let originHost='';try{originHost=new URL(origin).host}catch{}
-   if(!path.startsWith('/api/integration/')&&(!origin||(allowed?origin!==allowed:originHost!==req.headers.host)))return json(res,403,{error:'请求来源无效'});
+   if(!path.startsWith('/api/integration/')&&path!=='/api/sso/ticket'&&(!origin||(allowed?origin!==allowed:originHost!==req.headers.host)))return json(res,403,{error:'请求来源无效'});
+  }
+  if(path==='/api/sso/ticket'&&req.method==='POST'){
+   if(!serviceAuthorized(req))return json(res,401,{error:'服务鉴权失败'});
+   const identity=String(req.headers['x-wecom-userid']||'').trim();if(!identity||identity.length>100||!/^[\w.@-]+$/.test(identity))return json(res,403,{error:'企业微信 UserID 无效'});
+   const employee=db.prepare('SELECT * FROM employees WHERE wecomUserId=?').get(identity);if(!ssoUser(employee))return json(res,403,{error:'用户无权进入资盒，请先同步在职员工身份并确认账号状态'});
+   const origin=process.env.APP_ORIGIN||'';let base;try{base=new URL(origin);if(base.protocol!=='https:'||base.pathname!=='/'||base.search||base.hash)throw new Error()}catch{return json(res,503,{error:'资盒尚未配置 HTTPS APP_ORIGIN'})}
+   await body(req,1024);
+   if(ssoTickets.size>=10_000)return json(res,503,{error:'免登请求繁忙，请稍后重试'});
+   const ticket=randomBytes(32).toString('base64url'),digest=createHash('sha256').update(ticket).digest('hex');ssoTickets.set(digest,{employeeId:employee.id,expires:Date.now()+ssoTicketTTL});
+   const loginUrl=new URL('/sso/consume',base);loginUrl.searchParams.set('ticket',ticket);return json(res,200,{loginUrl:loginUrl.href,expiresIn:60});
+  }
+  if(path==='/sso/consume'&&req.method==='GET'){
+   res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
+   const ticket=url.searchParams.get('ticket')||'',digest=createHash('sha256').update(ticket).digest('hex'),entry=ssoTickets.get(digest);ssoTickets.delete(digest);
+   if(!entry||entry.expires<Date.now())return json(res,400,{error:'免登票据无效或已过期'});
+   const employee=db.prepare('SELECT * FROM employees WHERE id=?').get(entry.employeeId);if(!ssoUser(employee))return json(res,403,{error:'用户无权进入资盒'});
+   const token=randomBytes(32).toString('hex');sessions.set(token,{employeeId:employee.id,expires:Date.now()+sessionTTL});res.setHeader('Set-Cookie',`asset_session=${token}; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800`);res.writeHead(303,{Location:'/'});return res.end();
   }
   if(path==='/api/login'&&req.method==='POST'){
    const ip=req.socket.remoteAddress||'unknown';const now=Date.now();let a=attempts.get(ip);if(!a||a.start+15*60_000<now)a={count:0,start:now};if(a.count>=10)return json(res,429,{error:'登录尝试过多，请 15 分钟后重试'});a.count++;attempts.set(ip,a);
@@ -45,8 +64,7 @@ const server=http.createServer(async(req,res)=>{
   }
   let user=auth(req);
   if(path.startsWith('/api/integration/')){
-   const expected=process.env.IT_SERVICE_TOKEN||'',provided=(req.headers.authorization||'').replace(/^Bearer /,'');
-   if(expected.length<32||provided.length!==expected.length||!timingSafeEqual(Buffer.from(provided),Buffer.from(expected)))return json(res,401,{error:'服务鉴权失败'});
+   if(!serviceAuthorized(req))return json(res,401,{error:'服务鉴权失败'});
    if(path==='/api/integration/directory'&&req.method==='POST'){const c=await body(req);if(!Array.isArray(c.people)||!c.people.length||c.people.length>2000)throw new Error('每次同步 1–2000 个通讯录身份');db.exec('BEGIN');try{for(const p of c.people)syncIdentity(db,p);db.exec('COMMIT')}catch(e){db.exec('ROLLBACK');throw e}return json(res,200,{synced:c.people.length})}
    const identity=String(req.headers['x-wecom-userid']||'');let employee=db.prepare('SELECT * FROM employees WHERE wecomUserId=? AND active=1').get(identity);
    if(!identity)return json(res,403,{error:'缺少企业微信 UserID'});const encodedName=req.headers['x-wecom-name'];if(!employee&&encodedName)employee=syncIdentity(db,{wecomUserId:identity,name:decodeURIComponent(String(encodedName)),department:decodeURIComponent(String(req.headers['x-wecom-department']||''))});if(!employee)return json(res,403,{error:'首次访问需由可信后端提供姓名，或先同步通讯录'});
@@ -88,8 +106,8 @@ const server=http.createServer(async(req,res)=>{
    if((path==='/api/me/assets'||path.startsWith('/api/assets/'))&&req.method==='GET'){
     const requested=new URL(req.url,'http://localhost').searchParams.get('username');if(user.role!=='admin'&&requested&&requested!==user.username)return json(res,403,{error:'只能查询本人名下资产'});
     const state=hydrate(JSON.parse(db.prepare("SELECT data FROM asset_state WHERE id='company'").get().data),directory(db));
-    if(path==='/api/me/assets')return json(res,200,{user:{username:user.username,name:user.name},assets:ownAssets(state,user)});
-    const asset=state.assets.find(a=>a.id===decodeURIComponent(path.slice('/api/assets/'.length))&&(user.role==='admin'||ownAssets(state,user).some(x=>x.id===a.id)));return json(res,asset?200:404,asset?{asset}:{error:'资产不存在或无权查看'});
+    if(path==='/api/me/assets')return json(res,200,{user:{username:user.username,name:user.name},assets:ownAssets(state,user,directory(db))});
+    const asset=state.assets.find(a=>a.id===decodeURIComponent(path.slice('/api/assets/'.length))&&(user.role==='admin'||ownAssets(state,user,directory(db)).some(x=>x.id===a.id)));return json(res,asset?200:404,asset?{asset}:{error:'资产不存在或无权查看'});
    }
    if(path==='/api/users'||path==='/api/account/password'){
     if(path==='/api/users'&&user.role!=='admin')return json(res,403,{error:'仅管理员可管理用户'});
@@ -179,7 +197,7 @@ const server=http.createServer(async(req,res)=>{
     const requested=new URL(req.url,'http://localhost').searchParams.get('username');if(user.role!=='admin'&&requested&&requested!==user.username)return json(res,403,{error:'只能查询本人名下资产'});
     let state=hydrate(JSON.parse(row.data),directory(db));
     if(requested&&user.role==='admin'){const target=db.prepare('SELECT id FROM users WHERE username=?').get(requested.toLowerCase());state={...state,assets:target?state.assets.filter(a=>a.holderUserId===target.id):[],requests:[],logs:[],events:[]}}
-    return json(res,200,{revision:row.revision,state:scopedState(state,user)});
+    return json(res,200,{revision:row.revision,state:scopedState(state,user,directory(db))});
    }
    if(req.method==='POST'){const input=await body(req,user.role==='admin'?128_000_000:32_000_000);if(user.role!=='admin'&&input.action!=='confirmTransfer')return json(res,403,{error:'普通用户仅可确认本人接收申请'});if(input.revision!==row.revision)return json(res,409,{error:'数据已更新，请刷新后重试'});const original=JSON.parse(row.data);let state=structuredClone(original);
     if(input.action==='restore')validateFullBackup(input.backup);
@@ -194,7 +212,7 @@ const server=http.createServer(async(req,res)=>{
  }catch(e){json(res,400,{error:e instanceof Error?e.message:'操作失败'})}
 });
 const port=Number(process.env.PORT||3000);server.listen(port,process.env.HOST||'0.0.0.0',()=>console.log(`AssetHub listening at http://localhost:${port}`));
-const cleanup=setInterval(()=>{const now=Date.now();for(const [k,v]of sessions)if(v.expires<now)sessions.delete(k);for(const [k,v]of attempts)if(v.start+15*60_000<now)attempts.delete(k)},60_000);cleanup.unref();
+const cleanup=setInterval(()=>{const now=Date.now();for(const [k,v]of sessions)if(v.expires<now)sessions.delete(k);for(const [k,v]of ssoTickets)if(v.expires<now)ssoTickets.delete(k);for(const [k,v]of attempts)if(v.start+15*60_000<now)attempts.delete(k)},60_000);cleanup.unref();
 for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>{server.close(()=>{db.close();process.exit(0)})});
 
 
